@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aa222bd6-405a-4e47-9df4-29335aefaebd" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ICOS-metrics-export/Chart.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/ICOS-metrics-export/Chart.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ICOS-metrics-export/values.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/ICOS-metrics-export/values.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
