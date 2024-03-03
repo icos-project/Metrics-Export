@@ -6,6 +6,7 @@ from werkzeug.serving import run_simple
 import logging
 from datetime import datetime
 
+# set a typical logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 # Initialize Flask
@@ -17,6 +18,15 @@ g = Gauge('intelligence_layer_model', 'Intelligence layer info', ['model'])
 
 @app.route('/process_model', methods=['POST'])
 def process_model():
+    """
+    process_model route will receive a json payload with a model and a result property.
+    Model property is the name of the model.
+    Result property is the value of the model prediction.
+    After getting the properties it creates a gauge metric that has as a property the model name and as a value the
+    result value.
+
+    :return: a json response with 400 if error occurs or 200 if metric is saved successfully.
+    """
     # Parse model and result from the request
     data = request.json
     model = data.get('model')
