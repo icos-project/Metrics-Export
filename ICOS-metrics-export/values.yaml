@@ -4,7 +4,7 @@
 
 replicaCount: 1
 name: icos-metrics-export
-port: 8000
+port: 9600
 
 image:
   name: menelaoszetas/icos_intelligence_layer_metrics_export
@@ -14,8 +14,8 @@ image:
 service:
   type: NodePort
   ports:
-    - port: 8000
-      targetPort: 8000
+    - port: 9600
+      targetPort: 9600
       nodePort: 30600
 
 #imagePullSecrets: []

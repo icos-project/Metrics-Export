@@ -2,6 +2,26 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Values.name }}
+  annotations:
+    # enable/disable the scraping of metrics from this service/pod
+    # Default: false
+    telemetry.icos.eu/scrape: true
+    # the interval of time at which the endponint will be scraped
+    # Default: 60s
+    telemetry.icos.eu/interval: 60s
+    # the timeout for the scraping call
+    # Default: 2s
+    telemetry.icos.eu/timeout: 10s
+    # the protocol to use (e.g, http, https)
+    # Default: http
+    telemetry.icos.eu/scheme: http
+    # the path at which scrape
+    # Default: /
+    telemetry.icos.eu/path: /metrics
+    # the port at which scrape
+    # Default: 80
+    telemetry.icos.eu/port: "{{ .Values.port  }}"
+
 spec:
   type: {{ .Values.service.type }}
   ports:
