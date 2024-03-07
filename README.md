@@ -37,3 +37,9 @@ This command will start the metrics export layer, making it accessible to Promet
 ## Contributing
 Contributions to the ICOS Intelligence Layer Metrics Export are welcome. If you have suggestions for improvements or bug
 fixes, please open an issue or submit a pull request.
+
+# Legal
+The ICOS Metrics Export  is released under the {LICENSE NAME} license.
+Copyright © 2022-2024 National and Kapodistrian University of Athens. All rights reserved.
+
+🇪🇺 This work has received funding from the European Union's HORIZON research and innovation programme under grant agreement No. 101070177.

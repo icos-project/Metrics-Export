@@ -11,6 +11,9 @@ spec:
     metadata:
       labels:
         app: {{ .Values.name }}
+      # enable/disable the collection of logs from this pod
+      # Default: false
+      logs.icos.eu/scrape: true
     spec:
       containers:
         - name: {{ .Values.name }}
