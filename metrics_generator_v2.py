@@ -1,16 +1,15 @@
 import os
 from flask import Flask, request, jsonify
-# for swagger
-from flask_restx import Api, Resource, reqparse
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
-from werkzeug.serving import run_simple
-import logging
-from datetime import datetime
-from enum import Enum
-from metric_types_functions import counter, gauge, info
 from prometheus_client import make_wsgi_app, REGISTRY
 from prometheus_client.core import CollectorRegistry
 from prometheus_client.multiprocess import MultiProcessCollector
+from metric_types_functions import counter, gauge, info
+from werkzeug.serving import run_simple
+from werkzeug.middleware.dispatcher import DispatcherMiddleware# for swagger
+from flask_restx import Api, Resource, reqparse
+import logging
+from datetime import datetime
+from enum import Enum
 
 # get the registry of the metrics
 registry = CollectorRegistry()
@@ -19,8 +18,10 @@ MultiProcessCollector(registry)
 # set a typical logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 # Initialize Flask
 app = Flask(__name__)
+
 # Initialize Api
 api = Api(app, version='1.0', title='Metrics Generator API', description='A simple API for generating metrics')
 
@@ -29,11 +30,11 @@ api = Api(app, version='1.0', title='Metrics Generator API', description='A simp
 class MetricType(Enum):
     Counter = 1
     Gauge = 2
-    # Summary = 3
-    # Histogram = 4
+    Summary = 3
+    Histogram = 4
     Info = 5
-    # Enum = 6
-    # Exemplars = 7
+    Enum = 6
+    Exemplars = 7
 
 
 # Function to get an existing metric by name from the registry
@@ -64,6 +65,14 @@ class ProcessModel(Resource):
         data = request.json
         # get the metrics type value. Default is Gauge
         metric_type_value = data.get('type_of_metric', 2)
+        # get the metric name
+        metric_name = data.get('metric_name', None)
+        # get the value passed
+        value = data.get('value', None)
+        # get metric info
+        metric_info = data.get('metric_info', None)
+        # get metric labels
+        labels = data.get('labels', {})
 
         # Convert the incoming metric type value to MetricType enum
         try:
@@ -71,41 +80,29 @@ class ProcessModel(Resource):
         except ValueError:
             return {'error': 'Invalid metric type'}, 400
 
-        # get the metric name
-        metric_name = data.get('metric_name', None)
-        # get the value passed
-        value = data.get('value', None)
-
         # if metric name or value are not passed then return error
         if metric_name is None or value is None:
+            logger.error('metric_name and value not passed.')
             return jsonify({'error': 'metric_name and value are required.'}), 400
 
         # check if metric already exists
         # if it already exists then just update it at the metric runs
         existing_metric = get_metric_by_name(metric_name)
 
-        # get metric info
-        metric_info = data.get('metric_info', None)
-        # get metric labels
-        labels = data.get('labels', {})
-
-        logger.info('Time: {}, metrics name: {}, value: {}'.format(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
-                                                                   metric_name, value))
+        logger.info('Time: {}, metrics name: {}, value: {}'.format(
+            datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], metric_name, value))
 
         # Update the appropriate metric based on the enum
         if metric_type == MetricType.Counter:
-            metric = counter(existing_metric, metric_name, metric_info, labels, value)
+            counter(existing_metric, metric_name, metric_info, labels, value)
         elif metric_type == MetricType.Gauge:
-            metric = gauge(existing_metric, metric_name, metric_info, labels, value)
+            gauge(existing_metric, metric_name, metric_info, labels, value)
         # elif metric_type == MetricType.Summary:
         # elif metric_type == MetricType.Histogram:
         elif metric_type == MetricType.Info:
-            metric = info(existing_metric, metric_name, metric_info, value)
+            info(existing_metric, metric_name, metric_info, value)
         # elif metric_type == MetricType.Enum:
         # elif metric_type == MetricType.Exemplars:
-
-        # use it for future to keep track of metric name and labels
-        print(metric)
 
         return jsonify({'message': 'Metric updated successfully.'}), 200
 

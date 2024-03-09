@@ -1,10 +1,11 @@
 from prometheus_client import Gauge, Counter, Info
 
 
-def counter(metric_name, metric_info, labels, value):
+def counter(existing_metric, metric_name, metric_info, labels, value):
     """
     Counters go up, and reset when the process restarts.
 
+    :param existing_metric: The already existing metric if found
     :param metric_name: The metric name
     :param metric_info: The metric info
     :param labels: The labels that will pass for the metric
@@ -19,15 +20,21 @@ def counter(metric_name, metric_info, labels, value):
     else:
         labels_keys = []
 
-    # Initialize a counter metric
-    if labels_keys:
-        c = Counter(metric_name, metric_info, labels_keys)
-        # Set the gauge with labels from labels_dict and the value provided.
-        c.labels(**labels).inc(value)
+    if existing_metric is None:
+        # Initialize a counter metric
+        if labels_keys:
+            c = Counter(metric_name, metric_info, labels_keys)
+            # Increase the counter with labels from labels_dict and the value provided.
+            c.labels(**labels).inc(value)
+        else:
+            c = Counter(metric_name, metric_info, [])
+            c.inc(value)
     else:
-        c = Counter(metric_name, metric_info, [])
-        c.inc(value)
-    return c
+        if labels_keys:
+            # Increase the counter with labels from labels_dict and the value provided.
+            existing_metric.labels(**labels).inc(value)
+        else:
+            existing_metric.inc(value)
 
 
 def gauge(existing_metric, metric_name, metric_info, labels, value):
@@ -66,10 +73,11 @@ def gauge(existing_metric, metric_name, metric_info, labels, value):
             existing_metric.set(value)
 
 
-def info(metric_name, metric_info, value):
+def info(existing_metric, metric_name, metric_info, value):
     """
     Info tracks key-value information, usually about a whole target.
 
+    :param existing_metric: The already existing metric if found
     :param metric_name: The metric name
     :param metric_info: The metric info
     :param value: The value of the info
@@ -78,7 +86,9 @@ def info(metric_name, metric_info, value):
     if metric_info is None:
         metric_info = metric_name + ' info'
 
-    # Initialize an info metric
-    i = Info(metric_name, metric_info)
-    i.info(value)
-    return i
+    if existing_metric is None:
+        # Initialize an info metric
+        i = Info(metric_name, metric_info)
+        i.info(value)
+    else:
+        existing_metric.info(value)
