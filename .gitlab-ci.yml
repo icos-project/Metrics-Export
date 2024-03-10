@@ -7,4 +7,4 @@ include:
     file: '/pipelines/docker-image.yaml'
 
 variables:
-  PH_HELM_CHART_FOLDER: ICOS-metrics-export/
+  PH_HELM_CHART_FOLDER: icos-export-custom-metrics-to-prometheus/

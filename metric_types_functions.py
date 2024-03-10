@@ -1,4 +1,5 @@
 from prometheus_client import Gauge, Counter, Info
+from metric_helpers import my_registry
 
 
 def counter(existing_metric, metric_name, metric_info, labels, value):
@@ -23,12 +24,13 @@ def counter(existing_metric, metric_name, metric_info, labels, value):
     if existing_metric is None:
         # Initialize a counter metric
         if labels_keys:
-            c = Counter(metric_name, metric_info, labels_keys)
+            c = Counter(metric_name, metric_info, labels_keys, registry=my_registry)
             # Increase the counter with labels from labels_dict and the value provided.
             c.labels(**labels).inc(value)
         else:
-            c = Counter(metric_name, metric_info, [])
+            c = Counter(metric_name, metric_info, [], registry=my_registry)
             c.inc(value)
+        return c
     else:
         if labels_keys:
             # Increase the counter with labels from labels_dict and the value provided.
@@ -55,16 +57,17 @@ def gauge(existing_metric, metric_name, metric_info, labels, value):
         labels_keys = list(labels.keys())
     else:
         labels_keys = []
-
+    # print(registry.__dict__)
     if existing_metric is None:
         # Initialize a gauge metric
         if labels_keys:
-            g = Gauge(metric_name, metric_info, labels_keys)
+            g = Gauge(metric_name, metric_info, labels_keys, registry=my_registry)
             # Set the gauge with labels from labels_dict and the value provided.
             g.labels(**labels).set(value)
         else:
-            g = Gauge(metric_name, metric_info, [])
+            g = Gauge(metric_name, metric_info, [], registry=my_registry)
             g.set(value)
+        return g
     else:
         if labels_keys:
             # Set the gauge with labels from labels_dict and the value provided.
@@ -88,7 +91,8 @@ def info(existing_metric, metric_name, metric_info, value):
 
     if existing_metric is None:
         # Initialize an info metric
-        i = Info(metric_name, metric_info)
+        i = Info(metric_name, metric_info, registry=my_registry)
         i.info(value)
+        return i
     else:
         existing_metric.info(value)
