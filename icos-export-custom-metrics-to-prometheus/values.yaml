@@ -1,4 +1,4 @@
-#  ICOS Metrics Export 
+#  ICOS Metrics Export to Prometheus
 #  Copyright © 2022-2024 National and Kapodistrian University of Athens
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,11 +21,11 @@
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
-name: icos-metrics-export
+name: icos-export-custom-metrics-to-prometheus
 port: 9600
 
 image:
-  name: menelaoszetas/icos_intelligence_layer_metrics_export
+  name: menelaoszetas/icos_export_custom_metrics_to_prometheus
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
@@ -53,7 +53,7 @@ service:
 
 podAnnotations: {}
 podLabels: {
-  app: icos-metrics-export
+  app: icos-export-custom-metrics-to-prometheus
 }
 
 #podSecurityContext: {}

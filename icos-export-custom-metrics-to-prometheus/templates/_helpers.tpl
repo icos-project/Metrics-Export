@@ -1,5 +1,5 @@
 {{- /*
- *  ICOS Metrics Export
+ *  ICOS Metrics Export to Prometheus
  *  Copyright © 2022-2024 National and Kapodistrian University of Athens
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
