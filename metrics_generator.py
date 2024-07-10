@@ -124,38 +124,38 @@ def create_metric(request: MetricItemRequest):
     - states (optional): The list of states if an enum metric is being set for the first time.
 
     According to the metric type value:
-        - Counter = 1
-            Counter expects:
-            - metric_name (mandatory) -> string. If there is a suffix of _total on the metric name, it will be removed.
-            When exposing the time series for counter, a _total suffix will be added. This is for compatibility between
-            OpenMetrics and the Prometheus text format, as OpenMetrics requires the _total suffix.
-            - metric_info (optional) -> string | None.
-            - value (mandatory): the previous stored value will be incremented with that value -> positive number.
-            - labels (optional) -> Optional[Dict[str, str | int | float]].
-            - states (ignored).
-        - Gauge = 2
-            Gauge expects:
-            - metric_name (mandatory) -> string.
-            - metric_info (optional) -> string | None.
-            - value (mandatory): the new value that will be set -> Union[float, str] (must be a parsable to float
-            string.).
-            - labels (optional) -> Optional[Dict[str, str | int | float]].
-            - states (ignored).
-        - Info = 3
-            Info expects:
-            - metric_name (mandatory) -> string.
-            - metric_info (optional) -> string | None.
-            - value (mandatory): the new value that will be set -> Dict[str, str | float].
-            - labels (optional) -> Optional[Dict[str, str | int | float]].
-            - states (ignored),
-        - Enum = 4
-            Enum expects:
-            - metric_name (mandatory) -> string.
-            - metric_info (optional) -> string | None.
-            - value (mandatory): the state that will be set.
-            - labels (optional) -> Optional[Dict[str, str | int | float]].
-            - states (mandatory at creation of metric): the states that will be the available choice to set the state
-             (passed only the first time)
+    - Counter = 1
+        Counter expects:
+        - metric_name (mandatory) -> string. If there is a suffix of _total on the metric name, it will be removed.
+        When exposing the time series for counter, a _total suffix will be added. This is for compatibility between
+        OpenMetrics and the Prometheus text format, as OpenMetrics requires the _total suffix.
+        - metric_info (optional) -> string | None.
+        - value (mandatory): the previous stored value will be incremented with that value -> positive number.
+        - labels (optional) -> Optional[Dict[str, str | int | float]].
+        - states (ignored).
+    - Gauge = 2
+        Gauge expects:
+        - metric_name (mandatory) -> string.
+        - metric_info (optional) -> string | None.
+        - value (mandatory): the new value that will be set -> Union[float, str] (must be a parsable to float
+        string.).
+        - labels (optional) -> Optional[Dict[str, str | int | float]].
+        - states (ignored).
+    - Info = 3
+        Info expects:
+        - metric_name (mandatory) -> string.
+        - metric_info (optional) -> string | None.
+        - value (mandatory): the new value that will be set -> Dict[str, str | float].
+        - labels (optional) -> Optional[Dict[str, str | int | float]].
+        - states (ignored),
+    - Enum = 4
+        Enum expects:
+        - metric_name (mandatory) -> string.
+        - metric_info (optional) -> string | None.
+        - value (mandatory): the state that will be set.
+        - labels (optional) -> Optional[Dict[str, str | int | float]].
+        - states (mandatory at creation of metric): the states that will be the available choice to set the state
+         (passed only the first time)
     :return: a json response with 400 if error occurs or 200 if metric is saved successfully.
     """
     # get the metrics type value.

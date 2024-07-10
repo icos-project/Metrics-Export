@@ -79,7 +79,7 @@ To start the metrics_generator either:
    uvicorn metrics_generator:app --reload --host 0.0.0.0 --port 8000
    ```
 
-After the application is up, visiting `\doc` will show the swagger of the app.
+After the application is up, visiting `/docs` will show the swagger of the app.
 
 ## Contributing
 Contributions to 'ICOS Metrics Export to Prometheus' are welcome. If you have suggestions for improvements or bug
