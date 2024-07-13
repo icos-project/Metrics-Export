@@ -40,5 +40,17 @@ class MetricItemRequest(BaseModel):
     states: Optional[list[str]] = []
 
 
-class ResetCounterItemRequest(BaseModel):
+class UnregisterMetricItemRequest(BaseModel):
     metric_name: str
+
+
+class CreateModelMetricItemRequest(BaseModel):
+    type: MetricType
+    metric_name: str
+    metric_info: Optional[str] = None
+    labels: Optional[Dict[str, str | int | float]] = {}
+    states: Optional[list[str]] = []
+    telemetry_metric: str
+    model_name: str
+    step_in_seconds: int
+    sequence_size: int

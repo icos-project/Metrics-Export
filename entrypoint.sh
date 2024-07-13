@@ -4,4 +4,4 @@
 PORT=${PORT:-8000}
 
 # Start Gunicorn
-exec gunicorn "metrics_generator:app" -b "0.0.0.0:${PORT}" -k uvicorn.workers.UvicornWorker
+exec gunicorn "src.metrics_generator:app" -b "0.0.0.0:${PORT}" -k uvicorn.workers.UvicornWorker

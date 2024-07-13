@@ -2,7 +2,7 @@ from typing import Optional, Dict, Union, List
 
 from prometheus_client import Gauge, Counter, Info, Enum
 from prometheus_client.registry import Collector
-from metric_helpers import my_registry, set_metric_info, set_label_keys
+from src.metric_helpers import my_registry, set_metric_info, set_label_keys
 
 
 def counter(existing_metric: None | Collector, metric_name: str, metric_info: str | None,
@@ -19,6 +19,7 @@ def counter(existing_metric: None | Collector, metric_name: str, metric_info: st
     :param metric_info: The metric info.
     :param labels: The labels that will be passed for the metric.
     :param value: The amount to increment the counter.
+
     :return: null.
     """
     # set metric info
@@ -52,6 +53,7 @@ def gauge(existing_metric: None | Collector, metric_name: str, metric_info: str 
     :param metric_info: The metric info.
     :param labels: The labels that will be passed for the metric.
     :param value: The value to set the gauge. It must be a float or a parsable to float string.
+
     :return: null.
     """
     # set metric info
@@ -85,6 +87,7 @@ def info(existing_metric: None | Collector, metric_name: str, metric_info: str |
     :param metric_info: The metric info.
     :param labels: The labels that will be passed for the metric.
     :param value: The key-value information dictionary of the info.
+
     :return: null.
     """
     # set metric info
@@ -126,6 +129,7 @@ def enum(existing_metric: None | Collector, metric_name: str, metric_info: str |
     :param labels: The labels that will be passed for the metric.
     :param states: The states that will be available for the metric at its creation.
     :param state: The state to be set.
+
     :return: null.
     """
     # if state passed does not exist in states passed (at creation/update) return Value Error
