@@ -1,9 +1,7 @@
 import requests
 import json
-import os
 from fastapi import HTTPException
-
-INTELLIGENCE_API_BASE_URL = os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.167:3000/')
+from environment_variables import INTELLIGENCE_API_BASE_URL
 
 
 def prepare_results_for_model_input(results, sequence_size):
@@ -44,7 +42,7 @@ def call_intelligence_api_model(model_name, data):
     }
     try:
         response = requests.post(url, headers=headers, data=json.dumps(data))
-        # TODO: remove it
+        # TODO: remove it after test
         print('\nFrom CeADAR BentoML:')
         print(response.status_code)
         print(response.json())

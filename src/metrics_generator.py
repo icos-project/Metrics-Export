@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 import threading
 from datetime import datetime
@@ -12,6 +11,7 @@ from src.metric_helpers import CreateModelMetricItemRequest
 from src.metric_types_functions import counter, gauge, info, enum
 from src.step1_querry_to_premetheus import create_prometheus_range_query_url, call_prometheus_query_url_with_timeout
 from src.step2_intelligence_layer_call import call_intelligence_api_model, prepare_results_for_model_input
+from environment_variables import PROMETHEUS_BASE_URL
 
 
 # Using multiprocess collector for registry
@@ -278,9 +278,6 @@ def unregister_metric(request: UnregisterMetricItemRequest):
         logger.error('HTTPException: {}'.format(http_exc.detail))
         # Re-raise the HTTPException for FastAPI to handle
         raise http_exc
-
-
-PROMETHEUS_BASE_URL = os.getenv('PROMETHEUS_BASE_URL', 'http://91.138.223.127:30008/api/v1/query_range')
 
 
 def repeated_operation(request: CreateModelMetricItemRequest, exception_list):
