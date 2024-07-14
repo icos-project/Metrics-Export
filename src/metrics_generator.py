@@ -11,7 +11,7 @@ from src.metric_helpers import CreateModelMetricItemRequest
 from src.metric_types_functions import counter, gauge, info, enum
 from src.step1_querry_to_premetheus import create_prometheus_range_query_url, call_prometheus_query_url_with_timeout
 from src.step2_intelligence_layer_call import call_intelligence_api_model, prepare_results_for_model_input
-from environment_variables import PROMETHEUS_BASE_URL
+from src.environment_variables import PROMETHEUS_BASE_URL
 
 
 # Using multiprocess collector for registry
