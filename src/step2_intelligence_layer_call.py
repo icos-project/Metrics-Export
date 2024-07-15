@@ -1,7 +1,7 @@
 import requests
 import json
 from fastapi import HTTPException
-# import numpy as np
+import numpy as np
 from src.environment_variables import INTELLIGENCE_API_BASE_URL
 
 
@@ -23,10 +23,11 @@ def prepare_results_for_model_input(results, sequence_size):
         extracted_values = [0] * (desired_size - len(extracted_values)) + extracted_values
     if len(extracted_values) > desired_size:
         extracted_values = extracted_values[len(extracted_values) - desired_size:]
-    # extracted_values = np.array(extracted_values)
-    # extracted_values = extracted_values.reshape(-1, 1)
-    # extracted_values = extracted_values.reshape(1, desired_size, 1)
-    return extracted_values
+    # TODO: review the usage of numpy
+    extracted_values = np.array(extracted_values)
+    extracted_values = extracted_values.reshape(-1, 1)
+    extracted_values = extracted_values.reshape(1, desired_size, 1)
+    return extracted_values.tolist()
 
 
 def call_intelligence_api_model(model_name, data):
@@ -44,7 +45,6 @@ def call_intelligence_api_model(model_name, data):
         'accept': 'application/json',
         'Content-Type': 'application/json',
     }
-    print(json.dumps(data))
     try:
         response = requests.post(url, headers=headers, data=json.dumps(data))
         # TODO: remove it after test
