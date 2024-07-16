@@ -135,6 +135,10 @@ needs (type of metrics). It accepts a json payload that must contain:
         - step_in_seconds (mandatory) -> int.
         - sequence_size (mandatory) -> int.
 
+5) `stop_model_metrics` This route will receive a json payload to stop the metric creation(s) based on specific telemetry 
+   data. The json passed will contain:
+   1) `metric_names` (mandatory): A list of strings with the names of the metrics to be stopped.
+
 ## Usage
 To start the metrics_generator either:
 - create a docker image of it with the Dockerfile provided and deploy it.

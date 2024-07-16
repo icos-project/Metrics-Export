@@ -51,6 +51,12 @@ class CreateModelMetricItemRequest(BaseModel):
     labels: Optional[Dict[str, str | int | float]] = {}
     states: Optional[list[str]] = []
     telemetry_metric: str
+    model_route: str
     model_name: str
+    model_type: str
     step_in_seconds: int
     sequence_size: int
+
+
+class StopModelMetricItemRequest(BaseModel):
+    metric_names: list[str]
