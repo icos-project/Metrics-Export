@@ -1,0 +1,10 @@
+include:
+  - project: 'resengit/gitlab/pipeline-helpers'
+    ref: 'main'
+    file: '/pipelines/helm-chart.yaml'
+  - project: 'resengit/gitlab/pipeline-helpers'
+    ref: main
+    file: '/pipelines/docker-image.yaml'
+
+variables:
+  PH_HELM_CHART_FOLDER: icos-export-custom-metrics-to-prometheus/

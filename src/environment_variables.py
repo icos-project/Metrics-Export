@@ -1,0 +1,4 @@
+import os
+
+PROMETHEUS_BASE_URL = os.getenv('PROMETHEUS_BASE_URL', 'http://91.138.223.127:30008/api/v1/query_range')
+INTELLIGENCE_API_BASE_URL = os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.151:3000/')

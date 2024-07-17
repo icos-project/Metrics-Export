@@ -1,0 +1,16 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="prometheus_client.registry.Collector.labels" />
+          <option value="prometheus_client.registry.Collector.inc" />
+          <option value="prometheus_client.registry.Collector.set" />
+          <option value="prometheus_client.registry.Collector.info" />
+          <option value="prometheus_client.registry.Collector.state" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

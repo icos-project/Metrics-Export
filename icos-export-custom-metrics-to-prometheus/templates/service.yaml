@@ -1,0 +1,55 @@
+{{- /*
+    *  ICOS Metrics Export to Prometheus 
+    *  Copyright © 2022-2024 National and Kapodistrian University of Athens
+    *
+    *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+  *  You may obtain a copy of the License at
+  *
+  *  http://www.apache.org/licenses/LICENSE-2.0
+  *
+  *  Unless required by applicable law or agreed to in writing, software
+  *  distributed under the License is distributed on an "AS IS" BASIS,
+  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  *  See the License for the specific language governing permissions and
+  *  limitations under the License.
+  *
+  *  This work has received funding from the European Union's HORIZON research
+  *  and innovation programme under grant agreement No. 101070177.
+  */ -}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  annotations:
+    # enable/disable the scraping of metrics from this service/pod
+    # Default: false
+    telemetry.icos.eu/scrape: "true"
+    # the interval of time at which the endponint will be scraped
+    # Default: 60s
+    telemetry.icos.eu/interval: "60s"
+    # the timeout for the scraping call
+    # Default: 2s
+    telemetry.icos.eu/timeout: "10s"
+    # the protocol to use (e.g, http, https)
+    # Default: http
+    telemetry.icos.eu/scheme: http
+    # the path at which scrape
+    # Default: /
+    telemetry.icos.eu/path: /metrics
+    # the port at which scrape
+    # Default: 80
+    telemetry.icos.eu/port: "{{ .Values.port  }}"
+
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  {{- range .Values.service.ports }}
+    - port: {{ .port }}
+      targetPort: {{ .targetPort }}
+      nodePort: {{ .nodePort }}
+      protocol: TCP
+  {{- end }}
+  selector:
+    app: {{ .Values.name }}
