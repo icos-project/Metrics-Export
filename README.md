@@ -89,9 +89,11 @@ needs (type of metrics). It accepts a json payload that must contain:
     4) `labels` (optional): The dictionary of labels that will be set for the metric.
     5) `states` (optional): The list of states if an Enum metric is being set for the first time.
     6) `telemetry_metric` (mandatory): The query of the telemetry metric from witch data will be retrieved.
-    7) `model_name` (mandatory): The name of the model where the retrieved telemetry data will be sent.
-    8) `step_in_seconds` (mandatory): The time distance between each sample at telemetry metric.
-    9) `sequence_size` (mandatory): The amount of samples that will be used.
+    7) `model_route` (mandatory): The route of the model where it can be inferred from Intelligence API.
+    8) `model_name` (mandatory): The name of the model where the retrieved telemetry data will be sent.
+    9) `model_type` (mandatory): The type of the model where the retrieved telemetry data will be sent.
+    10) `step_in_seconds` (mandatory): The time distance between each sample at telemetry metric.
+    11) `sequence_size` (mandatory): The amount of samples that will be used.
   
    After getting the properties it creates the specific metric asked and registers it to the internal registry. According to the metric type value:
     - Counter = 1  
@@ -100,28 +102,36 @@ needs (type of metrics). It accepts a json payload that must contain:
           When exposing the time series for counter, a _total suffix will be added. This is for compatibility between
           OpenMetrics and the Prometheus text format, as OpenMetrics requires the _total suffix.
         - metric_info (optional) -> string | None.
-        - value (mandatory): the previous stored value will be incremented with that value -> positive number.
         - labels (optional) -> Optional[Dict[str, str | int | float]].
         - states (ignored).
+        - telemetry_metric (mandatory) -> string.
+        - model_route (mandatory) -> string.
+        - model_name (mandatory) -> string.
+        - model_type (mandatory) -> string.
         - step_in_seconds (mandatory) -> int.
         - sequence_size (mandatory) -> int.
     - Gauge = 2  
       Gauge expects:
         - metric_name (mandatory) -> string.
         - metric_info (optional) -> string | None.
-        - value (mandatory): the new value that will be set -> Union[float, str] (must be a parsable to float
-          string.).
         - labels (optional) -> Optional[Dict[str, str | int | float]].
         - states (ignored).
+        - telemetry_metric (mandatory) -> string.
+        - model_route (mandatory) -> string.
+        - model_name (mandatory) -> string.
+        - model_type (mandatory) -> string.
         - step_in_seconds (mandatory) -> int.
         - sequence_size (mandatory) -> int.
     - Info = 3  
       Info expects:
         - metric_name (mandatory) -> string.
         - metric_info (optional) -> string | None.
-        - value (mandatory): the new value that will be set -> Dict[str, str | float].
         - labels (optional) -> Optional[Dict[str, str | int | float]].
-        - states (ignored),
+        - states (ignored).
+        - telemetry_metric (mandatory) -> string.
+        - model_route (mandatory) -> string.
+        - model_name (mandatory) -> string.
+        - model_type (mandatory) -> string.
         - step_in_seconds (mandatory) -> int.
         - sequence_size (mandatory) -> int.
     - Enum = 4  
@@ -131,7 +141,11 @@ needs (type of metrics). It accepts a json payload that must contain:
         - value (mandatory): the state that will be set.
         - labels (optional) -> Optional[Dict[str, str | int | float]].
         - states (mandatory at creation of metric): the states that will be the available choice to set the state
-          (passed only the first time)
+          (passed only the first time).
+        - telemetry_metric (mandatory) -> string.
+        - model_route (mandatory) -> string.
+        - model_name (mandatory) -> string.
+        - model_type (mandatory) -> string.
         - step_in_seconds (mandatory) -> int.
         - sequence_size (mandatory) -> int.
 
@@ -148,8 +162,8 @@ To start the metrics_generator either:
    uvicorn metrics_generator:app --reload --host 0.0.0.0 --port 8000
    ```
 - the application needs to have two environmental variables defined:  
-    - `PROMETHEUS_BASE_URL`: the url which the create_model_metric route will use to retrieve/query telemetry data.
-    - `INTELLIGENCE_API_BASE_URL`: the url which the create_model_metric route will use to infer a model.
+    - `PROMETHEUS_BASE_URL`: The url which the create_model_metric route will use to retrieve/query telemetry data.
+    - `INTELLIGENCE_API_BASE_URL`: The url which the create_model_metric route will use to infer a model.
 
 After the application is up, visiting `\docs` will show the swagger of the app.
 
