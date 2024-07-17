@@ -1,6 +1,6 @@
 # Use the official Python 3.11 image as the base image
 FROM python:3.11
-USER root
+# USER root
 
 # Set the working directory in the container
 WORKDIR /usr/src/
