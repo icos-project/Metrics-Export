@@ -159,7 +159,7 @@ To start the metrics_generator either:
 - create a helm release from the helm provided at 'icos-export-custom-metrics-to-prometheus' folder.
 - run it locally with
    ```bash
-   uvicorn metrics_generator:app --reload --host 0.0.0.0 --port 8000
+   uvicorn src.metrics_generator:app --reload --host 0.0.0.0 --port 8000
    ```
 - the application needs to have two environmental variables defined:  
     - `PROMETHEUS_BASE_URL`: The url which the create_model_metric route will use to retrieve/query telemetry data.
