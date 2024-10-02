@@ -93,7 +93,7 @@ needs (type of metrics). It accepts a json payload that must contain:
     8) `model_name` (mandatory): The name of the model where the retrieved telemetry data will be sent.
     9) `model_type` (mandatory): The type of the model where the retrieved telemetry data will be sent.
     10) `step_in_seconds` (mandatory): The time distance between each sample at telemetry metric.
-    11) `sequence_size` (mandatory): The amount of samples that will be used.
+    11) `steps_back` (mandatory): The amount of samples that will be used.
   
    After getting the properties it creates the specific metric asked and registers it to the internal registry. According to the metric type value:
     - Counter = 1  
@@ -109,7 +109,7 @@ needs (type of metrics). It accepts a json payload that must contain:
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
         - step_in_seconds (mandatory) -> int.
-        - sequence_size (mandatory) -> int.
+        - steps_back (mandatory) -> int.
     - Gauge = 2  
       Gauge expects:
         - metric_name (mandatory) -> string.
@@ -121,7 +121,7 @@ needs (type of metrics). It accepts a json payload that must contain:
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
         - step_in_seconds (mandatory) -> int.
-        - sequence_size (mandatory) -> int.
+        - steps_back (mandatory) -> int.
     - Info = 3  
       Info expects:
         - metric_name (mandatory) -> string.
@@ -133,7 +133,7 @@ needs (type of metrics). It accepts a json payload that must contain:
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
         - step_in_seconds (mandatory) -> int.
-        - sequence_size (mandatory) -> int.
+        - steps_back (mandatory) -> int.
     - Enum = 4  
       Enum expects:
         - metric_name (mandatory) -> string.
@@ -147,7 +147,7 @@ needs (type of metrics). It accepts a json payload that must contain:
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
         - step_in_seconds (mandatory) -> int.
-        - sequence_size (mandatory) -> int.
+        - steps_back (mandatory) -> int.
 
 5) `stop_model_metrics` This route will receive a json payload to stop the metric creation(s) based on specific telemetry 
    data. The json passed will contain:
@@ -163,7 +163,7 @@ To start the metrics_generator either:
    ```
 - the application needs to have two environmental variables defined:  
     - `PROMETHEUS_BASE_URL`: The url which the create_model_metric route will use to retrieve/query telemetry data.
-    - `INTELLIGENCE_API_BASE_URL`: The url which the create_model_metric route will use to infer a model.
+    - `INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL`: The url which the create_model_metric route will use to infer a model.
 
 After the application is up, visiting `\docs` will show the swagger of the app.
 

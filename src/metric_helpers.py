@@ -55,8 +55,45 @@ class CreateModelMetricItemRequest(BaseModel):
     model_name: str
     model_type: str
     step_in_seconds: int
-    sequence_size: int
+    steps_back: int
 
 
 class StopModelMetricItemRequest(BaseModel):
     metric_names: list[str]
+
+
+# create the enums of model types
+class ModelType(Enum):
+    XGB = 'XGB'
+    Arima = 'Arima'
+
+
+# create the types for Arima model parameters
+class ArimaModelParameters(BaseModel):
+    p: Optional[int] = None
+    d: Optional[int] = None
+    q: Optional[int] = None
+
+
+# create the types for XGB model parameters
+class XGBModelParameters(BaseModel):
+    n_estimators: Optional[int] = None
+    max_depth: Optional[int] = None
+    eta: Optional[float] = None
+    subsample: Optional[float] = None
+    colsample_bytree: Optional[float] = None
+    alpha: Optional[int] = None
+
+
+class TrainModelMetricItemRequest(BaseModel):
+    model_name: str
+    model_type: ModelType
+    test_size: float
+    dataset_names: Optional[list[str]] = None
+    steps_back: Optional[int] = None
+    max_models_count: Optional[int] = None
+    max_mlruns_count: Optional[int] = None
+    shap_samples: Optional[int] = None
+    model_parameters: ArimaModelParameters | XGBModelParameters
+    telemetry_metrics: list[str]
+

@@ -3,14 +3,14 @@ from datetime import datetime, timedelta
 import requests
 
 
-def create_prometheus_range_query_url(base_url, query, step_in_seconds, sequence_size, end_time=None):
+def create_prometheus_range_query_url(base_url, query, step_in_seconds, steps_back, end_time=None):
     """
     Creates the URL that will ask prometheus/Thanos for the specific metric.
 
     :param base_url: The base url of prometheus/Thanos API.
     :param query: The query to get the specific metric. Query must secure the uniqueness of the response results.
     :param step_in_seconds: The step at witch the query will get the past values from prometheus/Thanos.
-    :param sequence_size: How many past values are ideally wanted.
+    :param steps_back: How many past values are ideally wanted.
     :param end_time: Till what time to query. Default will be the current time that the function is called.
 
     :return: The url with all the info.
@@ -23,8 +23,8 @@ def create_prometheus_range_query_url(base_url, query, step_in_seconds, sequence
 
     # Convert string to datetime object
     start_timestamp = datetime.strptime(end_timestamp, '%Y-%m-%dT%H:%M:%SZ')
-    # Subtract the sequence_size * step_in_seconds
-    start_timestamp = start_timestamp - timedelta(seconds=(sequence_size+1)*step_in_seconds)
+    # Subtract the steps_back * step_in_seconds
+    start_timestamp = start_timestamp - timedelta(seconds=(steps_back+1)*step_in_seconds)
     # Convert back to ISO 8601 format string with 'Z'
     start_timestamp = start_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
 
@@ -44,6 +44,7 @@ def create_prometheus_range_query_url(base_url, query, step_in_seconds, sequence
 
     # Combine with the base URL
     full_url = f"{base_url}?{encoded_params}"
+    print(full_url)
     return full_url
 
 
