@@ -9,24 +9,28 @@ def prepare_results_for_model_input(results, steps_back):
     """
     Takes the results from the prometheus/Thanos query and prepares them as an input for the model call.
 
-    :param results: The results returned from prometheus/Thanos query, a list of tuples.
+    :param results: The results returned from grafana query.
     :param steps_back: The amount of past values that the model will take as input.
 
     :return: An array with the results
     """
-    # Extract the second value from each tuple that is the metric value
-    extracted_values = [value[1] for value in results]
-    # Desired size of the new list is the sequence size provided
-    desired_size = steps_back
-    # Prepend zeros if the extracted list is smaller than the desired size
-    if len(extracted_values) < desired_size:
-        extracted_values = [0] * (desired_size - len(extracted_values)) + extracted_values
-    if len(extracted_values) > desired_size:
-        extracted_values = extracted_values[len(extracted_values) - desired_size:]
-    return extracted_values
+    refactored_data = {}
+    for item in results:
+        for key, value_list in item.items():
+            # Extract only the 'value' fields
+            values = [entry['value'] for entry in value_list]
+            # Fill with 0s if the list is shorter than the target_length
+            if len(values) < steps_back:
+                values.extend([0] * (steps_back - len(values)))
+            # Truncate the list if it's longer than the target_length
+            values = values[:steps_back]
+            # Add to the refactored dictionary
+            refactored_data[key] = values
+
+    return refactored_data
 
 
-def call_intelligence_api_refer_model(request: CreateModelMetricItemRequest, input_data):
+def call_intelligence_api_infer_model(request: CreateModelMetricItemRequest, input_data):
     """
     This function will call the intelligence api endpoint that corresponds to the model name passed for model inference
     with the data provided.
@@ -37,16 +41,21 @@ def call_intelligence_api_refer_model(request: CreateModelMetricItemRequest, inp
 
     :return: Response status code and response data as a json.
     """
-    url = INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL + request.model_route
+    url = INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL
     headers = {
         'accept': 'application/json',
         'Content-Type': 'application/json',
     }
     data = json.dumps({
-        "model_tag": request.model_name,
-        "model_type": request.model_type,
+        "model_tag": request.model_tag,
+        "model_type": request.model_type.value,
+        "steps_back": request.steps_back,
+        "history_sample_size": request.history_sample_size,
+        "data_interruption": request.data_interruption,
+        "history_data": request.history_data,
         "input_series": input_data
     })
+    print("data: ", data)
     try:
         response = requests.post(url, headers=headers, data=data)
         return response.status_code, response.json()
@@ -69,21 +78,21 @@ def call_intelligence_api_train_model(request: TrainModelMetricItemRequest, inpu
 
     :return: Response status code and response data as a json.
     """
-    url = INTELLIGENCE_API_MODEL_TRAINING_URL + request.model_route
+    url = INTELLIGENCE_API_MODEL_TRAINING_URL
     headers = {
         'accept': 'application/json',
         'Content-Type': 'application/json',
     }
     data = json.dumps({
         "model_name": request.model_name,
-        "model_type": request.model_type,
+        "model_type": request.model_type.value,
         "test_size": request.test_size,
-        "dataset_names": input_data,
+        "dataset_name": input_data,
         "steps_back": request.steps_back,
         "max_models_count": request.max_models_count,
         "max_mlruns_count": request.max_mlruns_count,
         "shap_samples": request.shap_samples,
-        "model_parameters": request.model_parameters,
+        "model_parameters": request.model_parameters.dict(),
     })
     try:
         response = requests.post(url, headers=headers, data=data)

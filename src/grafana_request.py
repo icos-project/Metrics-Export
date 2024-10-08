@@ -3,6 +3,7 @@ import time
 import requests
 from src.environment_variables import GRAFANA_API_BASE_URL, GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN, GRAFANA_INTERVAL_MS, \
     GRAFANA_UTC_OFFSET_SEC
+from src.utilities import format_metric_string
 
 # Grafana URL and Prometheus Data Source
 grafana_url = GRAFANA_API_BASE_URL
@@ -15,20 +16,21 @@ headers = {
 }
 
 
-def grafana_request(queries: list[str]):
+async def grafana_request(queries: list[str]):
     from_time_in_epochs = int(time.time() * 1000) - 11000 * GRAFANA_INTERVAL_MS
     to_time_in_epochs = int(time.time() * 1000)
-    _refIds = []
+    _ref_ids = []
     _data = {
         "queries": [],
         "from": str(from_time_in_epochs),
         "to": str(to_time_in_epochs)
     }
     for index, query in enumerate(queries):
-        _refIds.append(str(index))
+        _ref_id = format_metric_string(query)
+        _ref_ids.append(_ref_id)
         _data["queries"].append(
             {
-                "refId": str(index),
+                "refId": _ref_id,
                 "expr": query,
                 "range": True,
                 "instant": False,
@@ -44,7 +46,7 @@ def grafana_request(queries: list[str]):
                 "interval": "",
                 "datasourceId": 1,
                 "intervalMs": GRAFANA_INTERVAL_MS,
-                "maxDataPoints": 11000
+                "maxDataPoints": 5
             }
         )
 
@@ -57,7 +59,7 @@ def grafana_request(queries: list[str]):
         res = response.json()
 
         results = []
-        for _refId in _refIds:
+        for _refId in _ref_ids:
             if len(res['results'][_refId]['frames'][0]['data']['values']) > 0:
                 _results = []
                 timestamps = res['results'][_refId]['frames'][0]['data']['values'][0]

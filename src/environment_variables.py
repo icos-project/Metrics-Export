@@ -2,6 +2,7 @@ import os
 
 # PROMETHEUS_BASE_URL = os.getenv('PROMETHEUS_BASE_URL', 'http://91.138.223.127:30008/api/v1/query_range')
 PROMETHEUS_BASE_URL = os.getenv('PROMETHEUS_BASE_URL', 'http://10.160.3.20:32104/api/v1/query_range')
+INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT = int(os.getenv('INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT', 60))
 
 INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL = os.getenv('INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL',
                                                       'http://10.160.3.151:3000/')

@@ -1,25 +1,29 @@
-import csv
+import pandas as pd
 
 
-def create_and_save_csv_files_from_grafana(grafana_results):
-    # print('data: ', grafana_results)
-    print('len: ', len(grafana_results))
+def create_and_save_csv_files_from_grafana(grafana_results, model_name: str):
+    combined_data = {}
+
+    # Iterate over the results to build the combined dataset
     for item in grafana_results:
-        # Each item is a dictionary, get the key and the associated list of values
         for key, values in item.items():
-            # Create the filename using the key
-            filename = f'{key}.csv'
+            # For each key, iterate over its values and merge into combined_data
+            for entry in values:
+                time_value = entry['time']
+                value = entry['value']
 
-            print('filename: ', filename)
+                # Initialize time key if not exists
+                if time_value not in combined_data:
+                    combined_data[time_value] = {'time': time_value}
 
-            # Open the file in write mode
-            with open(filename, mode='w', newline='') as file:
-                writer = csv.writer(file)
+                # Add the value under the corresponding key (column name)
+                combined_data[time_value][key] = value
 
-                # Write the header
-                writer.writerow(['time', 'value'])
+    # Convert combined_data to a list of dictionaries and then a pandas DataFrame
+    combined_data_list = list(combined_data.values())
+    df = pd.DataFrame(combined_data_list)
 
-                # Write the rows (time and value pairs)
-                for entry in values:
-                    writer.writerow([entry['time'], entry['value']])
+    # Save the DataFrame to a CSV file
+    df.to_csv('{}.csv'.format(model_name), index=False)
 
+    print('Dataset created and saved to combined_dataset.csv')

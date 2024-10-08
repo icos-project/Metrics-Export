@@ -31,6 +31,12 @@ class MetricType(Enum):
     Enum = 4
 
 
+# create the enums of model types
+class ModelType(Enum):
+    XGB = 'XGB'
+    Arima = 'Arima'
+
+
 class MetricItemRequest(BaseModel):
     type: MetricType
     metric_name: str
@@ -45,27 +51,23 @@ class UnregisterMetricItemRequest(BaseModel):
 
 
 class CreateModelMetricItemRequest(BaseModel):
-    type: MetricType
+    metric_type: MetricType
     metric_name: str
     metric_info: Optional[str] = None
     labels: Optional[Dict[str, str | int | float]] = {}
-    states: Optional[list[str]] = []
-    telemetry_metric: str
-    model_route: str
-    model_name: str
-    model_type: str
+    telemetry_metrics: list[str]
+    model_tag: str
+    model_type: ModelType
+    model_states: Optional[list[str]] = []
     step_in_seconds: int
     steps_back: int
+    history_sample_size: Optional[int] = None
+    data_interruption: bool = False
+    history_data: Optional[list[int]] = [[]]
 
 
 class StopModelMetricItemRequest(BaseModel):
     metric_names: list[str]
-
-
-# create the enums of model types
-class ModelType(Enum):
-    XGB = 'XGB'
-    Arima = 'Arima'
 
 
 # create the types for Arima model parameters
@@ -86,11 +88,13 @@ class XGBModelParameters(BaseModel):
 
 
 class TrainModelMetricItemRequest(BaseModel):
+    labels: Optional[Dict[str, str | int | float]] = {}
     model_name: str
     model_type: ModelType
     test_size: float
-    dataset_names: Optional[list[str]] = None
-    steps_back: Optional[int] = None
+    dataset_name: str | None = None
+    steps_back: int
+    step_in_seconds: Optional[int] = None
     max_models_count: Optional[int] = None
     max_mlruns_count: Optional[int] = None
     shap_samples: Optional[int] = None
