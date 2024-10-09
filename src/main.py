@@ -383,7 +383,8 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
     - model_route (mandatory): The route of the model where it can be inferred from Intelligence API.
     - model_name (mandatory): The name of the model where the retrieved telemetry data will be sent.
     - model_type (mandatory): The type of the model where the retrieved telemetry data will be sent.
-    - step_in_seconds (mandatory): The time distance between each sample at telemetry metric.
+    - step_in_seconds (optional): The time distance between each sample at telemetry metric. Default is the update rate
+    of Prometheus.
     - steps_back (mandatory): The amount of samples that will be used.
     - history_sample_size (optional): TBD
     - data_interruption (optional): TBD
@@ -403,7 +404,7 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - model_route (mandatory) -> string.
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
         - data_interruption (optional): bool = False.
@@ -418,7 +419,7 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - model_route (mandatory) -> string.
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
         - data_interruption (optional): bool = False.
@@ -433,7 +434,7 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - model_route (mandatory) -> string.
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
         - data_interruption (optional): bool = False.
@@ -449,7 +450,7 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - model_route (mandatory) -> string.
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
         - data_interruption (optional): bool = False.
@@ -459,6 +460,8 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
     model results are sent to Prometheus/Thanos.
     """
     try:
+        if request.step_in_seconds and request.step_in_seconds < INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT:
+            request.step_in_seconds = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
         # Create a stop event for this specific request
         stop_event = threading.Event()
         # Run the first cycle and send immediate response
@@ -545,7 +548,8 @@ async def train_model_metric_endpoint(request: TrainModelMetricItemRequest):
     - dataset_name (optional) -> str : The name of the dataframe at Dataclay. If left empty new dataframe will be
     created for the result of Grafana queries.
     - steps_back (mandatory) -> int : The amount of samples that will be used.
-    - step_in_seconds (optional): The time distance between each sample at telemetry metric.
+    - step_in_seconds (optional): The time distance between each sample at telemetry metric. Default is the update rate
+    of Prometheus.
     - max_models_count (optional) -> int : TBD
     - max_mlruns_count (optional) -> int : TBD
     - shap_samples (optional) -> int : TBD
@@ -569,6 +573,9 @@ async def train_model_metric_endpoint(request: TrainModelMetricItemRequest):
     model results being sent to Prometheus/Thanos.
     """
     try:
+        if request.step_in_seconds and request.step_in_seconds < INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT:
+            request.step_in_seconds = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
+        print('test: ', request.step_in_seconds)
         # If dataset names are passed then skip grafana and dataclay steps.
         if request.dataset_name:
             dataset_name = request.dataset_name

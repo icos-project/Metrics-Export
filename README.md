@@ -97,7 +97,8 @@ needs (type of metrics). It accepts a json payload that must contain:
     7) `model_route` (mandatory): The route of the model where it can be inferred from Intelligence API.
     8) `model_name` (mandatory): The name of the model where the retrieved telemetry data will be sent.
     9) `model_type` (mandatory): The type of the model where the retrieved telemetry data will be sent.
-    10) `step_in_seconds` (mandatory): The time distance between each sample at telemetry metric.
+    10) `step_in_seconds` (optional) -> int: The time distance between each sample at telemetry metric. Default is the update rate
+        of Prometheus.
     11) `steps_back` (mandatory): The amount of samples that will be used.
     12) `history_sample_size` (optional): TBD
     13) `data_interruption` (optional): TBD
@@ -116,7 +117,7 @@ needs (type of metrics). It accepts a json payload that must contain:
         - model_route (mandatory) -> string.
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
         - data_interruption (optional): bool = False.
@@ -131,7 +132,7 @@ needs (type of metrics). It accepts a json payload that must contain:
         - model_route (mandatory) -> string.
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
         - data_interruption (optional): bool = False.
@@ -146,7 +147,7 @@ needs (type of metrics). It accepts a json payload that must contain:
         - model_route (mandatory) -> string.
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
         - data_interruption (optional): bool = False.
@@ -163,7 +164,7 @@ needs (type of metrics). It accepts a json payload that must contain:
         - model_route (mandatory) -> string.
         - model_name (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
         - data_interruption (optional): bool = False.
@@ -185,7 +186,8 @@ needs (type of metrics). It accepts a json payload that must contain:
    5) `dataset_name` (optional) -> str: The name of the dataframe at Dataclay. If left empty new dataframe will be
       created for the result of Grafana queries.
    6) `steps_back` (mandatory) -> int: The amount of samples that will be used.
-   7) `step_in_seconds` (optional) -> int: The time distance between each sample at telemetry metric.
+   7) `step_in_seconds` (optional) -> int: The time distance between each sample at telemetry metric. Default is the update rate
+      of Prometheus.
    8) `max_models_count` (optional) -> int : TBD
    9) `max_mlruns_count` (optional) -> int : TBD 
    10) `shap_samples` (optional) -> int : TBD 

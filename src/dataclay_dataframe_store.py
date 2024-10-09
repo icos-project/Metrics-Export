@@ -12,6 +12,8 @@ async def dataclay_dataframe_store(dataset_name: str, dataset_dataframe: DataFra
     pdf = PersistentDF(dataset_dataframe)
     pdf.make_persistent(alias="{}_dataset".format(dataset_name))
 
+    client.stop()
+
 
 def create_dataframe(grafana_results):
     combined_data = {}

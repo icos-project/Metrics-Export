@@ -3,6 +3,8 @@ from enum import Enum
 from pydantic import BaseModel
 from typing import Union, Dict, Optional
 
+from src.environment_variables import INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
+
 # Initialize the custom registry
 my_registry = CollectorRegistry()
 
@@ -60,7 +62,7 @@ class CreateModelMetricItemRequest(BaseModel):
     model_tag: str
     model_type: ModelType
     model_states: Optional[list[str]] = []
-    step_in_seconds: int
+    step_in_seconds: Optional[int] = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
     steps_back: int
     history_sample_size: Optional[int] = None
     data_interruption: bool = False
@@ -95,7 +97,7 @@ class TrainModelMetricItemRequest(BaseModel):
     test_size: float
     dataset_name: str | None = None
     steps_back: int
-    step_in_seconds: Optional[int] = None
+    step_in_seconds: Optional[int] = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
     max_models_count: Optional[int] = None
     max_mlruns_count: Optional[int] = None
     shap_samples: Optional[int] = None
