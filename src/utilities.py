@@ -24,9 +24,3 @@ def format_metric_string(metric_string):
     formatted_string = f"{metric_name}_{'_'.join(formatted_pairs)}"
 
     return formatted_string
-
-# # Example usage
-# input_string = 'scaph_host_power_microwatts{job="scaphandre", instance="192.168.2.60:30080"} / 1000000'
-# formatted_result = format_metric_string(input_string)
-#
-# print(formatted_result)

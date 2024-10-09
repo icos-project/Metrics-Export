@@ -38,7 +38,7 @@ class ModelType(Enum):
 
 
 class MetricItemRequest(BaseModel):
-    type: MetricType
+    metric_type: MetricType
     metric_name: str
     metric_info: Optional[str] = None
     value: Union[float, str, dict[str, str | float]]
@@ -47,6 +47,7 @@ class MetricItemRequest(BaseModel):
 
 
 class UnregisterMetricItemRequest(BaseModel):
+    metric_type: MetricType
     metric_name: str
 
 
@@ -63,7 +64,7 @@ class CreateModelMetricItemRequest(BaseModel):
     steps_back: int
     history_sample_size: Optional[int] = None
     data_interruption: bool = False
-    history_data: Optional[list[int]] = [[]]
+    history_data: Optional[list[list[int]]] = [[]]
 
 
 class StopModelMetricItemRequest(BaseModel):
