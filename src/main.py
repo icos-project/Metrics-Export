@@ -380,7 +380,7 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
     - labels (optional): The dictionary of labels that will be set for the metric.
     - states (optional): The list of states if an enum metric is being set for the first time.
     - telemetry_metrics (mandatory). The queries of the telemetry metrics from witch data will be retrieved.
-    - model_name (mandatory): The name of the model where the retrieved telemetry data will be sent.
+    - model_tag (mandatory): The name of the model where the retrieved telemetry data will be sent.
     - model_type (mandatory): The type of the model where the retrieved telemetry data will be sent.
     - step_in_seconds (optional): The time distance between each sample at telemetry metric. Default is the update rate
     of Prometheus.
@@ -400,7 +400,7 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - labels (optional) -> Optional[Dict[str, str | int | float]].
         - states (ignored).
         - telemetry_metrics (mandatory) -> list[str].
-        - model_name (mandatory) -> string.
+        - model_tag (mandatory) -> string.
         - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
@@ -414,7 +414,7 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - labels (optional) -> Optional[Dict[str, str | int | float]].
         - states (ignored).
         - telemetry_metrics (mandatory) -> list[str].
-        - model_name (mandatory) -> string.
+        - model_tag (mandatory) -> string.
         - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
@@ -428,7 +428,7 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - labels (optional) -> Optional[Dict[str, str | int | float]].
         - states (ignored).
         - telemetry_metrics (mandatory) -> list[str].
-        - model_name (mandatory) -> string.
+        - model_tag (mandatory) -> string.
         - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
@@ -443,7 +443,7 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - states (mandatory at creation of metric): the states that will be the available choice to set the state
          (passed only the first time)
         - telemetry_metrics (mandatory) -> list[str].
-        - model_name (mandatory) -> string.
+        - model_tag (mandatory) -> string.
         - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
@@ -570,7 +570,6 @@ async def train_model_metric_endpoint(request: TrainModelMetricItemRequest):
     try:
         if request.step_in_seconds and request.step_in_seconds < INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT:
             request.step_in_seconds = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
-        print('test: ', request.step_in_seconds)
         # If dataset names are passed then skip grafana and dataclay steps.
         if request.dataset_name:
             dataset_name = request.dataset_name
