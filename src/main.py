@@ -298,10 +298,9 @@ async def repeated_operation(request: CreateModelMetricItemRequest, exception_li
     :return: None
     """
     steps_back = request.steps_back
-
     try:
         # step 1 --> using the service account at Grafana create the queries based on the telemetry metrics asked
-        grafana_results = await grafana_request(request.telemetry_metrics)
+        grafana_results = await grafana_request(request.telemetry_metrics, steps_back)
 
         if grafana_results is not None and len(grafana_results) > 0:
             # prepare the input data for the model
@@ -319,9 +318,9 @@ async def repeated_operation(request: CreateModelMetricItemRequest, exception_li
                 'metric_type',
                 'metric_name',
                 'metric_info',
-                'labels',
-                'states'
+                'labels'
             })
+            data['states'] = request.model_states
             data['value'] = model_result
             create_metric(MetricItemRequest(**data))
         else:

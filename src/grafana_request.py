@@ -7,7 +7,7 @@ from src.utilities import format_metric_string
 
 # Grafana URL and Prometheus Data Source
 grafana_url = GRAFANA_API_BASE_URL
-datasource_url = grafana_url + '/api/ds/query'
+datasource_url = grafana_url + 'api/ds/query'
 
 # Headers, add your authentication here if needed
 headers = {
@@ -16,10 +16,20 @@ headers = {
 }
 
 
-async def grafana_request(queries: list[str]):
+async def grafana_request(queries: list[str], steps_back: int = 0):
+    # create the default "from time" in epoch format where metric data will be fetched
     from_time_in_epochs = int(time.time() * 1000) - 11000 * GRAFANA_INTERVAL_MS
+    # create the default "to time" in epoch format that represents the present time till witch metric data will be
+    # fetched
     to_time_in_epochs = int(time.time() * 1000)
+    # array to keep the reference id of each query
     _ref_ids = []
+    # set the steps back concerning the number of results expected. For first iteration of train model the max amount
+    # is set
+
+    _steps_back = steps_back
+    if steps_back == 0:
+        _steps_back = 11000
     _data = {
         "queries": [],
         "from": str(from_time_in_epochs),
@@ -36,7 +46,7 @@ async def grafana_request(queries: list[str]):
                 "instant": False,
                 "datasource": {
                     "type": "prometheus",
-                    "uid": "PBFA97CFB590B2093"
+                    "uid": "a151c53f-db08-4d10-a3b8-97ef5f2d614f"
                 },
                 "editorMode": "code",
                 "legendFormat": "__auto",
@@ -46,7 +56,7 @@ async def grafana_request(queries: list[str]):
                 "interval": "",
                 "datasourceId": 1,
                 "intervalMs": GRAFANA_INTERVAL_MS,
-                "maxDataPoints": 5
+                "maxDataPoints": _steps_back
             }
         )
 
@@ -59,6 +69,7 @@ async def grafana_request(queries: list[str]):
         res = response.json()
 
         results = []
+        # for each reference id that represents an response from Grafana create the results
         for _refId in _ref_ids:
             if len(res['results'][_refId]['frames'][0]['data']['values']) > 0:
                 _results = []
@@ -68,8 +79,9 @@ async def grafana_request(queries: list[str]):
                     result = {'time': timestamps[_index], 'value': values[_index]}
                     _results.append(result)
                 results.append({_refId: _results})
-
+                print(results)
         return results
+
     else:
         print("Failed to fetch data: ", response.status_code, response.text)
 

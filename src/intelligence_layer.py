@@ -55,7 +55,6 @@ def call_intelligence_api_infer_model(request: CreateModelMetricItemRequest, inp
         "history_data": request.history_data,
         "input_series": input_data
     })
-    print("data: ", data)
     try:
         response = requests.post(url, headers=headers, data=data)
         return response.status_code, response.json()
