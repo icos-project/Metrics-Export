@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 import threading
@@ -6,12 +7,15 @@ from fastapi import FastAPI, HTTPException
 from prometheus_client import make_asgi_app
 from prometheus_client.multiprocess import MultiProcessCollector
 from prometheus_client.registry import Collector
-from src.metric_helpers import my_registry, MetricType, MetricItemRequest, UnregisterMetricItemRequest
-from src.metric_helpers import CreateModelMetricItemRequest, StopModelMetricItemRequest
+
+from src.dataclay_dataframe_store import create_and_save_dataframe_to_dataclay
+from src.grafana_request import grafana_request
+from src.metric_helpers import my_registry, MetricType, MetricItemRequest, UnregisterMetricItemRequest, \
+    TrainModelMetricItemRequest, CreateModelMetricItemRequest, StopModelMetricItemRequest
 from src.metric_types_functions import counter, gauge, info, enum
-from src.step1_querry_to_premetheus import create_prometheus_range_query_url, call_prometheus_query_url_with_timeout
-from src.step2_intelligence_layer_call import call_intelligence_api_model, prepare_results_for_model_input
-from src.environment_variables import PROMETHEUS_BASE_URL
+from src.intelligence_layer import call_intelligence_api_infer_model, prepare_results_for_model_input, \
+    call_intelligence_api_train_model
+from src.environment_variables import INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
 
 
 # Using multiprocess collector for registry
@@ -130,7 +134,7 @@ def create_metric(request: MetricItemRequest):
 
     :param request: The json passed will contain:
 
-    - type (mandatory): The metric type.
+    - metric_type (mandatory): The metric type.
     - metric_name (mandatory): The name of the metric to be created or retrieved.
     - metric_info (optional): The info of the metric to be created or retrieved.
     - value (mandatory): The value that will be passed to the metric.
@@ -174,10 +178,9 @@ def create_metric(request: MetricItemRequest):
 
     :return: a json response with 400 if error occurs or 200 if metric is saved successfully.
     """
-    # get the metrics type value.
-    metric_type = request.type
-    # get the metric name
-    # Strip whitespace and check if it's not None or empty
+    # get the metrics type value
+    metric_type = request.metric_type
+    # get the metric name. Strip whitespace and check if it's not None or empty
     metric_name = request.metric_name.strip() if request.metric_name else None
     # get metric info
     metric_info = request.metric_info
@@ -264,14 +267,15 @@ def unregister_metric(request: UnregisterMetricItemRequest):
 
     :param request: The json passed will contain:
 
-    - metric_name (mandatory): The name of the metric to be unregistered.
+    - metric_type (mandatory) -> MetricType(Enum) : The metric type.
+    - metric_name (mandatory) -> string : The name of the metric to be unregistered.
 
     :return: a json response (200) if metric is unregistered successfully.
     """
     # check if counter metric already exists and has the same type
     # if it already exists then reset it
     try:
-        existing_counter_metric = get_metric_by_name_and_type(request.metric_name, MetricType.Gauge)
+        existing_counter_metric = get_metric_by_name_and_type(request.metric_name, request.metric_type)
         if existing_counter_metric is not None:
             registry.unregister(existing_counter_metric)
             return {'message': 'Unregistered metric successfully.'}
@@ -283,32 +287,26 @@ def unregister_metric(request: UnregisterMetricItemRequest):
         raise http_exc
 
 
-def repeated_operation(request: CreateModelMetricItemRequest, exception_list, first_cycle_done):
+async def repeated_operation(request: CreateModelMetricItemRequest, exception_list):
     """
-    The whole operation that will run repeatedly to get data from Prometheus/Thanos, call an intelligence api model and
+    The whole operation that will run repeatedly to get data from Grafana, call an intelligence api model and
     post the metric.
 
     :param request: The request contains all the info needed (model name, query, sequence size, steps etc.).
     :param exception_list: A list to store exceptions.
-    :param first_cycle_done: An Event to signal the completion of the first cycle.
 
     :return: None
     """
-    query = request.telemetry_metric
-    step_in_seconds = request.step_in_seconds
-    sequence_size = request.sequence_size
-
+    steps_back = request.steps_back
     try:
-        # create the url for the query
-        query_url = create_prometheus_range_query_url(PROMETHEUS_BASE_URL, query, step_in_seconds, sequence_size)
-        # call the query url created to get the results
-        query_results = call_prometheus_query_url_with_timeout(query_url, timeout=step_in_seconds-1)
-        # check that a result is returned and results is filled with data
-        if query_results is not None and len(query_results) > 0:
+        # step 1 --> using the service account at Grafana create the queries based on the telemetry metrics asked
+        grafana_results = await grafana_request(request.telemetry_metrics, steps_back)
+
+        if grafana_results is not None and len(grafana_results) > 0:
             # prepare the input data for the model
-            model_input_data = prepare_results_for_model_input(query_results, sequence_size)
+            model_input_data = prepare_results_for_model_input(grafana_results, steps_back)
             # run the model and save the result
-            model_result_status_code, model_result = call_intelligence_api_model(request, model_input_data)
+            model_result_status_code, model_result = call_intelligence_api_infer_model(request, model_input_data)
             # If model_result_status_code is not 200, exception must be thrown for error with intelligence API
             # communication
             if model_result_status_code != 200:
@@ -317,12 +315,12 @@ def repeated_operation(request: CreateModelMetricItemRequest, exception_list, fi
             model_result = model_result[0][0]
             # post the result
             data = request.dict(include={
-                'type',
+                'metric_type',
                 'metric_name',
                 'metric_info',
-                'labels',
-                'states'
+                'labels'
             })
+            data['states'] = request.model_states
             data['value'] = model_result
             create_metric(MetricItemRequest(**data))
         else:
@@ -331,18 +329,15 @@ def repeated_operation(request: CreateModelMetricItemRequest, exception_list, fi
             raise HTTPException(status_code=400, detail=http_err)
     except Exception as e:
         exception_list.append(e)
-    finally:
-        first_cycle_done.set()
 
 
-def create_model_telemetry_metric(request: CreateModelMetricItemRequest, exception_list, first_cycle_done, stop_event):
+async def create_model_telemetry_metric(request: CreateModelMetricItemRequest, exception_list, stop_event):
     """
     create_model_telemetry_metric will receive a json payload to create a metric based on specific telemetry data
     that will be retrieved and a model that must exist at Intelligence layer.
 
     :param request: The json passed at create_model_metric route.
     :param exception_list: used to catch the error that could occur at the first execution.
-    :param first_cycle_done: An Event to signal the completion of the first cycle.
     :param stop_event: An Event to signal the alt execution.
 
     :return: None.
@@ -350,7 +345,7 @@ def create_model_telemetry_metric(request: CreateModelMetricItemRequest, excepti
     try:
         start_time = time.time()
         # Run the first cycle
-        repeated_operation(request, exception_list, first_cycle_done)
+        await repeated_operation(request, exception_list)
         if exception_list:
             raise exception_list[0]
         # Wait for the next time interval, taking into account the time already elapsed
@@ -361,9 +356,8 @@ def create_model_telemetry_metric(request: CreateModelMetricItemRequest, excepti
         while not stop_event.is_set():
             start_time = time.time()
             # Run the repeated operation
-            repeated_operation(request, exception_list, first_cycle_done)
+            await repeated_operation(request, exception_list)
             # Wait for the next time interval, taking into account the time already elapsed
-            # time_to_next_interval = max(request.step_in_seconds - (time.time() - start_time), 0)
             time_to_next_interval = max(request.step_in_seconds - (time.time() - start_time), 0)
             time.sleep(time_to_next_interval)
     except Exception as e:
@@ -372,26 +366,29 @@ def create_model_telemetry_metric(request: CreateModelMetricItemRequest, excepti
 
 # create a metric based telemetry metric provided and model that will run
 @app.post('/create_model_metric')
-def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
+async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
     """
     create_model_metric route will receive a json payload to create a metric based on specific telemetry data
-    that will be retrieved and a model that must exist at Intelligence layer.
+    that will be retrieved from Grafana and fed to an existing model at Intelligence layer.
 
     :param request: The json passed will contain:
 
-    - type (mandatory): The metric type.
+    - metric_type (mandatory): The metric type.
     - metric_name (mandatory): The name of the metric to be created or retrieved.
     - metric_info (optional): The info of the metric to be created or retrieved.
     - labels (optional): The dictionary of labels that will be set for the metric.
     - states (optional): The list of states if an enum metric is being set for the first time.
-    - telemetry_metric (mandatory): The query of the telemetry metric from witch data will be retrieved.
-    - model_route (mandatory): The route of the model where it can be inferred from Intelligence API.
-    - model_name (mandatory): The name of the model where the retrieved telemetry data will be sent.
+    - telemetry_metrics (mandatory). The queries of the telemetry metrics from witch data will be retrieved.
+    - model_tag (mandatory): The name of the model where the retrieved telemetry data will be sent.
     - model_type (mandatory): The type of the model where the retrieved telemetry data will be sent.
-    - step_in_seconds (mandatory): The time distance between each sample at telemetry metric.
-    - sequence_size (mandatory): The amount of samples that will be used.
+    - step_in_seconds (optional): The time distance between each sample at telemetry metric. Default is the update rate
+    of Prometheus.
+    - steps_back (mandatory): The amount of samples that will be used.
+    - history_sample_size (optional): TBD
+    - data_interruption (optional): TBD
+    - history_data (optional): TBD
 
-    According to the metric type value:
+    According to the metric_type value:
 
     - Counter = 1
         Counter expects:
@@ -401,36 +398,42 @@ def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - metric_info (optional) -> string | None.
         - labels (optional) -> Optional[Dict[str, str | int | float]].
         - states (ignored).
-        - telemetry_metric (mandatory) -> string.
-        - model_route (mandatory) -> string.
-        - model_name (mandatory) -> string.
+        - telemetry_metrics (mandatory) -> list[str].
+        - model_tag (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
-        - sequence_size (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
+        - steps_back (mandatory) -> int.
+        - history_sample_size (optional): int | None.
+        - data_interruption (optional): bool = False.
+        - history_data (optional): list[list[int]].
     - Gauge = 2
         Gauge expects:
         - metric_name (mandatory) -> string.
         - metric_info (optional) -> string | None.
         - labels (optional) -> Optional[Dict[str, str | int | float]].
         - states (ignored).
-        - telemetry_metric (mandatory) -> string.
-        - model_route (mandatory) -> string.
-        - model_name (mandatory) -> string.
+        - telemetry_metrics (mandatory) -> list[str].
+        - model_tag (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
-        - sequence_size (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
+        - steps_back (mandatory) -> int.
+        - history_sample_size (optional): int | None.
+        - data_interruption (optional): bool = False.
+        - history_data (optional): list[list[int]].
     - Info = 3
         Info expects:
         - metric_name (mandatory) -> string.
         - metric_info (optional) -> string | None.
         - labels (optional) -> Optional[Dict[str, str | int | float]].
         - states (ignored).
-        - telemetry_metric (mandatory) -> string.
-        - model_route (mandatory) -> string.
-        - model_name (mandatory) -> string.
+        - telemetry_metrics (mandatory) -> list[str].
+        - model_tag (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
-        - sequence_size (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
+        - steps_back (mandatory) -> int.
+        - history_sample_size (optional): int | None.
+        - data_interruption (optional): bool = False.
+        - history_data (optional): list[list[int]].
     - Enum = 4
         Enum expects:
         - metric_name (mandatory) -> string.
@@ -438,31 +441,38 @@ def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - labels (optional) -> Optional[Dict[str, str | int | float]].
         - states (mandatory at creation of metric): the states that will be the available choice to set the state
          (passed only the first time)
-        - telemetry_metric (mandatory) -> string.
-        - model_route (mandatory) -> string.
-        - model_name (mandatory) -> string.
+        - telemetry_metrics (mandatory) -> list[str].
+        - model_tag (mandatory) -> string.
         - model_type (mandatory) -> string.
-        - step_in_seconds (mandatory) -> int.
-        - sequence_size (mandatory) -> int.
+        - step_in_seconds (optional) -> int.
+        - steps_back (mandatory) -> int.
+        - history_sample_size (optional): int | None.
+        - data_interruption (optional): bool = False.
+        - history_data (optional): list[list[int]].
 
     :return: a json response 400 if error occurs or 200 if telemetry data are found, model inference is successful and
     model results are sent to Prometheus/Thanos.
     """
     try:
+        if request.step_in_seconds and request.step_in_seconds < INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT:
+            request.step_in_seconds = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
         # Create a stop event for this specific request
         stop_event = threading.Event()
         # Run the first cycle and send immediate response
         exception_list = []
-        first_cycle_done = threading.Event()
-        first_cycle_thread = threading.Thread(target=create_model_telemetry_metric, args=(request, exception_list,
-                                                                                          first_cycle_done, stop_event))
-        first_cycle_thread.start()
-        first_cycle_done.wait()  # Wait for the first cycle to complete
+
+        async def run_first_cycle():
+            await create_model_telemetry_metric(request, exception_list, stop_event)
+
+        # Schedule the first cycle as an asyncio task and await its completion
+        first_cycle_task = asyncio.create_task(run_first_cycle())
+        await first_cycle_task
+
         if exception_list:
             raise exception_list[0]
 
         # Store the thread and stop event in the global dictionaries
-        threads[request.metric_name] = first_cycle_thread
+        threads[request.metric_name] = first_cycle_task
         stop_events[request.metric_name] = stop_event
 
         return {'message': 'First cycle completed successfully. Metric creation started.'}
@@ -512,3 +522,116 @@ def shutdown_event():
         event.set()
     for thread in threads.values():
         thread.join()
+
+
+# TODO: update the TBD.
+# create a metric based telemetry metric provided and model that will run
+@app.post('/train_model_metric')
+async def train_model_metric_endpoint(request: TrainModelMetricItemRequest):
+    """
+    train_model_metric route will receive a json payload to start a model training at Intelligence layer and then create
+    a metric based on that model and the specific telemetry data that will be retrieved.
+
+    :param request: The json passed will contain:
+
+    - labels (optional) -> Dict[str, str | int | float] : The dictionary of labels that will be set for the metric.
+    - model_name (mandatory) -> string : The name of the model where the retrieved telemetry data will be sent.
+    - model_type (mandatory) -> string : The type of the model to be trained. Possible values: "XGB", "Arima".
+    - test_size (mandatory) -> float : A float number between 0 and 1 that will indicate the percentage of test data
+    that will be used at training.
+    - dataset_name (optional) -> str : The name of the dataframe at Dataclay. If left empty new dataframe will be
+    created for the result of Grafana queries.
+    - steps_back (mandatory) -> int : The amount of samples that will be used.
+    - step_in_seconds (optional): The time distance between each sample at telemetry metric. Default is the update rate
+    of Prometheus.
+    - max_models_count (optional) -> int : TBD
+    - max_mlruns_count (optional) -> int : TBD
+    - shap_samples (optional) -> int : TBD
+    - model_parameters (mandatory) -> Dictionary: The parameters needed based on the model type that will be trained.
+    It must be a dictionary based on the model types:
+        - ArimaModelParameters:
+            - p (optional) -> int : TBD
+            - d (optional) -> int : TBD
+            - q (optional) -> int : TBD
+        - XGBModelParameters:
+            - n_estimators (optional) -> int : TBD
+            - max_depth (optional) -> int : TBD
+            - eta (optional) -> float : TBD
+            - subsample (optional) -> float : TBD
+            - colsample_bytree (optional) -> float : TBD
+            - alpha (optional) -> int : TBD
+    - telemetry_metrics (mandatory) -> list[str] : A list of queries for telemetry metrics from witch data will be
+    retrieved.
+
+    :return: a json response 400 if error occurs or 200 if model is created and model inference is successful with
+    model results being sent to Prometheus/Thanos.
+    """
+    try:
+        if request.step_in_seconds and request.step_in_seconds < INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT:
+            request.step_in_seconds = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
+        # If dataset names are passed then skip grafana and dataclay steps.
+        if request.dataset_name:
+            dataset_name = request.dataset_name
+        else:
+            # step 1 --> using the service account at Grafana create the queries based on the telemetry metrics asked
+            grafana_results = await grafana_request(request.telemetry_metrics)
+            # FRO MOCK --> create the csv based on the results and save them locally
+            # create_and_save_csv_files_from_grafana(grafana_results=grafana_results, model_name=request.model_name)
+            # step 2 --> save datasets to dataclay
+            await create_and_save_dataframe_to_dataclay(grafana_results=grafana_results, model_name=request.model_name)
+            dataset_name = request.model_name
+
+        logger.info('Time: {}, dataset {} created for model training of {}'.format(
+            datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], dataset_name, request.model_name))
+
+        # Return a response to the client immediately while continuing the rest of the processing
+        asyncio.create_task(continue_training_and_create_metric(request, dataset_name))
+        return {'message': 'Dataset created, model training started successfully.'}
+    except Exception as e:
+        http_err = 'An error occurred in train_model_metric_endpoint: {}'.format(e)
+        logger.error(http_err)
+        raise HTTPException(status_code=400, detail='{}'.format(e))
+
+
+async def continue_training_and_create_metric(request, dataset_name):
+    try:
+        logger.info('Time: {}, calling Intelligence API for model training of {}'.format(
+            datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], request.model_name))
+
+        # step 3 --> call CeADAR API and get the response with the model name and type
+        model_result_status_code, model_tag, metric_type, metric_states = await call_intelligence_api_train_model(
+            request=request, input_data=dataset_name)
+        # If model_result_status_code is not 200, exception must be thrown for error with intelligence API
+        if model_result_status_code != 200:
+            http_err = 'Intelligence API error.'
+            logger.error(http_err)
+            raise Exception(http_err)
+
+        logger.info('Time: {}, Intelligence API model training of {} completed. Model tag: {}, create metric type: {}, '
+                    'with metric states (if exist): {}'.format(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+                                                               request.model_name, model_tag, metric_type,
+                                                               metric_states))
+
+        # step 4 --> call create_model_metric
+        logger.info('Time: {}, Model inference of {} started.'.format(
+            datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], request.model_name))
+
+        data = request.dict(include={
+            'labels',
+            'steps_back',
+            'telemetry_metrics'
+        })
+        data['metric_name'] = dataset_name
+        data['metric_type'] = metric_type
+        if request.step_in_seconds and request.step_in_seconds >= INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT:
+            data['step_in_seconds'] = request.step_in_seconds
+        else:
+            data['step_in_seconds'] = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
+        data['model_tag'] = model_tag
+        data['model_type'] = request.model_type
+        data['model_states'] = metric_states
+
+        await create_model_metric_endpoint(CreateModelMetricItemRequest(**data))
+
+    except Exception as e:
+        logger.error(f"Error in continue_training_and_create_metric: {e}")

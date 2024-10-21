@@ -21,11 +21,11 @@
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
-name: icos-export-custom-metrics-to-prometheus
+name: icos-export-metrics
 port: 9600
 
 image:
-  name: menelaoszetas/icos_export_custom_metrics_to_prometheus
+  name: menelaoszetas/icos_metrics
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
@@ -34,7 +34,36 @@ service:
   ports:
     - port: 9600
       targetPort: 9600
-      nodePort: 30600
+      nodePort: 30608
+
+
+INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL: 'http://10.160.3.151:3000/'
+INTELLIGENCE_API_MODEL_TRAINING_URL: 'http://10.160.3.151:3000/'
+
+# NKUA URL
+#GRAFANA_API_BASE_URL: 'http://91.138.223.127:30009/'
+# NCSRD URL
+GRAFANA_API_BASE_URL: 'http://10.160.3.20:32100/'
+
+# NKUA Service Account Token
+#GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN: 'glsa_9fdUHcnFEwRYZRFrsTFT6wjsAjj0bYN1_0dd59558'
+# NCSRD Service Account Token
+GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN: 'glsa_mmrOBm0J8PYxjKjDk49JdvliP9sabnJp_313a14df'
+
+# NKUA grafana datasource uid
+#GRAFANA_DATASOURCE_UID: 'PBFA97CFB590B2093'
+# NCSRD grafana datasource uid
+GRAFANA_DATASOURCE_UID: 'a151c53f-db08-4d10-a3b8-97ef5f2d614f'
+
+# must be the same and at least equal to prometheus interval
+GRAFANA_INTERVAL_MS: 60000
+INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT: 60
+# UTC of server that grafana is deployed
+GRAFANA_UTC_OFFSET_SEC: 7200
+
+DATACLAY_HOST: '127.0.0.1'
+DATACLAY_USERNAME: 'testuser'
+DATACLAY_PASSWORD: 's3cret'
 
 #imagePullSecrets: []
 #nameOverride: ""
