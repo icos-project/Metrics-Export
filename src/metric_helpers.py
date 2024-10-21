@@ -3,6 +3,8 @@ from enum import Enum
 from pydantic import BaseModel
 from typing import Union, Dict, Optional
 
+from src.environment_variables import INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
+
 # Initialize the custom registry
 my_registry = CollectorRegistry()
 
@@ -31,8 +33,14 @@ class MetricType(Enum):
     Enum = 4
 
 
+# create the enums of model types
+class ModelType(Enum):
+    XGB = 'XGB'
+    Arima = 'Arima'
+
+
 class MetricItemRequest(BaseModel):
-    type: MetricType
+    metric_type: MetricType
     metric_name: str
     metric_info: Optional[str] = None
     value: Union[float, str, dict[str, str | float]]
@@ -41,22 +49,58 @@ class MetricItemRequest(BaseModel):
 
 
 class UnregisterMetricItemRequest(BaseModel):
+    metric_type: MetricType
     metric_name: str
 
 
 class CreateModelMetricItemRequest(BaseModel):
-    type: MetricType
+    metric_type: MetricType
     metric_name: str
     metric_info: Optional[str] = None
     labels: Optional[Dict[str, str | int | float]] = {}
-    states: Optional[list[str]] = []
-    telemetry_metric: str
-    model_route: str
-    model_name: str
-    model_type: str
-    step_in_seconds: int
-    sequence_size: int
+    telemetry_metrics: list[str]
+    model_tag: str
+    model_type: ModelType
+    model_states: Optional[list[str]] = []
+    step_in_seconds: Optional[int] = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
+    steps_back: int
+    history_sample_size: Optional[int] = None
+    data_interruption: bool = False
+    history_data: Optional[list[list[int]]] = [[]]
 
 
 class StopModelMetricItemRequest(BaseModel):
     metric_names: list[str]
+
+
+# create the types for Arima model parameters
+class ArimaModelParameters(BaseModel):
+    p: Optional[int] = None
+    d: Optional[int] = None
+    q: Optional[int] = None
+
+
+# create the types for XGB model parameters
+class XGBModelParameters(BaseModel):
+    n_estimators: Optional[int] = None
+    max_depth: Optional[int] = None
+    eta: Optional[float] = None
+    subsample: Optional[float] = None
+    colsample_bytree: Optional[float] = None
+    alpha: Optional[int] = None
+
+
+class TrainModelMetricItemRequest(BaseModel):
+    labels: Optional[Dict[str, str | int | float]] = {}
+    model_name: str
+    model_type: ModelType
+    test_size: float
+    dataset_name: str | None = None
+    steps_back: int
+    step_in_seconds: Optional[int] = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
+    max_models_count: Optional[int] = None
+    max_mlruns_count: Optional[int] = None
+    shap_samples: Optional[int] = None
+    model_parameters: ArimaModelParameters | XGBModelParameters
+    telemetry_metrics: list[str]
+
