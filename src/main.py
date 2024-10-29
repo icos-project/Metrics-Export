@@ -2,8 +2,9 @@ import asyncio
 import logging
 import time
 import threading
+from threading import Thread
 from datetime import datetime
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from prometheus_client import make_asgi_app
 from prometheus_client.multiprocess import MultiProcessCollector
 from prometheus_client.registry import Collector
@@ -306,22 +307,24 @@ async def repeated_operation(request: CreateModelMetricItemRequest, exception_li
             # prepare the input data for the model
             model_input_data = prepare_results_for_model_input(grafana_results, steps_back)
             # run the model and save the result
-            model_result_status_code, model_result = call_intelligence_api_infer_model(request, model_input_data)
+            model_result_status_code, model_results = call_intelligence_api_infer_model(request, model_input_data)
             # If model_result_status_code is not 200, exception must be thrown for error with intelligence API
             # communication
             if model_result_status_code != 200:
                 http_err = 'Intelligence API error or endpoint does not exist.'
                 raise HTTPException(status_code=400, detail=http_err)
-            model_result = model_result[0][0]
+            model_prediction = model_results['model_prediction']
+            model_metric_type = model_results['metric_type']
             # post the result
             data = request.dict(include={
-                'metric_type',
                 'metric_name',
                 'metric_info',
                 'labels'
             })
+            data['labels']['model_confidence'] = model_results['model_confidence']
+            data['metric_type'] = model_metric_type
             data['states'] = request.model_states
-            data['value'] = model_result
+            data['value'] = model_prediction
             create_metric(MetricItemRequest(**data))
         else:
             # If result is None, exception must be thrown for empty data
@@ -343,34 +346,44 @@ async def create_model_telemetry_metric(request: CreateModelMetricItemRequest, e
     :return: None.
     """
     try:
-        start_time = time.time()
-        # Run the first cycle
         await repeated_operation(request, exception_list)
+
         if exception_list:
             raise exception_list[0]
-        # Wait for the next time interval, taking into account the time already elapsed
-        time_to_next_interval = max(request.step_in_seconds - (time.time() - start_time), 0)
-        time.sleep(time_to_next_interval)
-
-        # Start a loop to run the operation repeatedly
-        while not stop_event.is_set():
-            start_time = time.time()
-            # Run the repeated operation
-            await repeated_operation(request, exception_list)
-            # Wait for the next time interval, taking into account the time already elapsed
-            time_to_next_interval = max(request.step_in_seconds - (time.time() - start_time), 0)
-            time.sleep(time_to_next_interval)
     except Exception as e:
         return e
 
 
+def run_continuous_task(request: CreateModelMetricItemRequest, exception_list, stop_event):
+    """
+    Function to continuously run the telemetry metric creation in a separate thread.
+    """
+    try:
+        asyncio.run(asyncio.sleep(request.step_in_seconds))
+        # Start a loop to run the operation repeatedly
+        while not stop_event.is_set():
+            start_time = time.time()
+            # Run the repeated operation
+            asyncio.run(create_model_telemetry_metric(request, exception_list, stop_event))
+
+            # Break down the sleep time into smaller chunks to allow faster response to stop_event
+            remaining_time = max(request.step_in_seconds - (time.time() - start_time), 0)
+            while remaining_time > 0 and not stop_event.is_set():
+                sleep_interval = min(remaining_time, 1)  # Check stop_event every 1 seconds
+                time.sleep(sleep_interval)
+                remaining_time -= sleep_interval
+    except Exception as e:
+        logger.error(f"Error in run_continuous_task: {e}")
+
+
 # create a metric based telemetry metric provided and model that will run
 @app.post('/create_model_metric')
-async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
+async def create_model_metric_endpoint(request: CreateModelMetricItemRequest, background_tasks: BackgroundTasks):
     """
     create_model_metric route will receive a json payload to create a metric based on specific telemetry data
     that will be retrieved from Grafana and fed to an existing model at Intelligence layer.
 
+    :param background_tasks:
     :param request: The json passed will contain:
 
     - metric_type (mandatory): The metric type.
@@ -456,23 +469,21 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
     try:
         if request.step_in_seconds and request.step_in_seconds < INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT:
             request.step_in_seconds = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
+
         # Create a stop event for this specific request
         stop_event = threading.Event()
         # Run the first cycle and send immediate response
         exception_list = []
 
-        async def run_first_cycle():
-            await create_model_telemetry_metric(request, exception_list, stop_event)
-
-        # Schedule the first cycle as an asyncio task and await its completion
-        first_cycle_task = asyncio.create_task(run_first_cycle())
-        await first_cycle_task
+        await create_model_telemetry_metric(request, exception_list, stop_event)
 
         if exception_list:
             raise exception_list[0]
 
-        # Store the thread and stop event in the global dictionaries
-        threads[request.metric_name] = first_cycle_task
+        # Start a new thread to run the continuous task in the background and store it
+        task_thread = Thread(target=run_continuous_task, args=(request, exception_list, stop_event))
+        task_thread.start()
+        threads[request.metric_name] = task_thread  # Store the thread itself
         stop_events[request.metric_name] = stop_event
 
         return {'message': 'First cycle completed successfully. Metric creation started.'}
