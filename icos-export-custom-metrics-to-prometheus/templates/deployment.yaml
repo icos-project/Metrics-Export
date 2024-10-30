@@ -15,6 +15,10 @@ spec:
       # Default: false
       logs.icos.eu/scrape: true
     spec:
+      {{- with .Values.imagePullSecrets | default .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 #      nodeSelector:
 #        tier: "controller"
       containers:
@@ -26,7 +30,7 @@ spec:
               protocol: TCP
           env:
             - name: PORT
-              value: "{{ tpl .Values.port . | quote }}"
+              value: "{{ .Values.port }}"
             - name: INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL
               value: "{{ tpl .Values.INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL . }}"
             - name: INTELLIGENCE_API_MODEL_TRAINING_URL
