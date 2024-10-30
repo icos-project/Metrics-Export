@@ -42,11 +42,11 @@ spec:
             - name: GRAFANA_DATASOURCE_UID
               value: "{{ tpl .Values.GRAFANA_DATASOURCE_UID . }}"
             - name: GRAFANA_INTERVAL_MS
-              value: "{{ tpl .Values.GRAFANA_INTERVAL_MS . }}"
+              value: "{{ .Values.GRAFANA_INTERVAL_MS }}"
             - name: INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
-              value: "{{ tpl .Values.INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT . }}"
+              value: "{{ .Values.INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT }}"
             - name: GRAFANA_UTC_OFFSET_SEC
-              value: "{{ tpl .Values.GRAFANA_UTC_OFFSET_SEC . }}"
+              value: "{{ .Values.GRAFANA_UTC_OFFSET_SEC }}"
             - name: DATACLAY_HOST
               value: "{{ tpl .Values.DATACLAY_HOST . }}"
             - name: DATACLAY_USERNAME
