@@ -1,24 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.name }}
+  name: {{ include "ICOS-metrics-export.fullname" . }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Values.name }}
+      app: {{ include "ICOS-metrics-export.fullname" . }}
   template:
     metadata:
       labels:
-        app: {{ .Values.name }}
+        app: {{ include "ICOS-metrics-export.fullname" . }}
       # enable/disable the collection of logs from this pod
       # Default: false
       logs.icos.eu/scrape: true
     spec:
+      {{- with .Values.imagePullSecrets | default .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 #      nodeSelector:
 #        tier: "controller"
       containers:
-        - name: {{ .Values.name }}
+        - name: {{ include "ICOS-metrics-export.fullname" . }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           ports:
             - name: http
@@ -28,15 +32,15 @@ spec:
             - name: PORT
               value: "{{ .Values.port }}"
             - name: INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL
-              value: "{{ .Values.INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL }}"
+              value: "{{ tpl .Values.INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL . }}"
             - name: INTELLIGENCE_API_MODEL_TRAINING_URL
-              value: "{{ .Values.INTELLIGENCE_API_MODEL_TRAINING_URL }}"
+              value: "{{ tpl .Values.INTELLIGENCE_API_MODEL_TRAINING_URL . }}"
             - name: GRAFANA_API_BASE_URL
-              value: "{{ .Values.GRAFANA_API_BASE_URL }}"
+              value: "{{ tpl .Values.GRAFANA_API_BASE_URL . }}"
             - name: GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN
-              value: "{{ .Values.GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN }}"
+              value: "{{ tpl .Values.GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN . }}"
             - name: GRAFANA_DATASOURCE_UID
-              value: "{{ .Values.GRAFANA_DATASOURCE_UID }}"
+              value: "{{ tpl .Values.GRAFANA_DATASOURCE_UID . }}"
             - name: GRAFANA_INTERVAL_MS
               value: "{{ .Values.GRAFANA_INTERVAL_MS }}"
             - name: INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
@@ -44,8 +48,8 @@ spec:
             - name: GRAFANA_UTC_OFFSET_SEC
               value: "{{ .Values.GRAFANA_UTC_OFFSET_SEC }}"
             - name: DATACLAY_HOST
-              value: "{{ .Values.DATACLAY_HOST }}"
+              value: "{{ tpl .Values.DATACLAY_HOST . }}"
             - name: DATACLAY_USERNAME
-              value: "{{ .Values.DATACLAY_USERNAME }}"
+              value: "{{ tpl .Values.DATACLAY_USERNAME . }}"
             - name: DATACLAY_PASSWORD
-              value: "{{ .Values.DATACLAY_PASSWORD }}"
+              value: "{{ tpl .Values.DATACLAY_PASSWORD . }}"
