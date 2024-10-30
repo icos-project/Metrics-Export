@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.name }}
+  name: {{ include "ICOS-metrics-export.fullname" . }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Values.name }}
+      app: {{ include "ICOS-metrics-export.fullname" . }}
   template:
     metadata:
       labels:
-        app: {{ .Values.name }}
+        app: {{ include "ICOS-metrics-export.fullname" . }}
       # enable/disable the collection of logs from this pod
       # Default: false
       logs.icos.eu/scrape: true
@@ -22,7 +22,7 @@ spec:
 #      nodeSelector:
 #        tier: "controller"
       containers:
-        - name: {{ .Values.name }}
+        - name: {{ include "ICOS-metrics-export.fullname" . }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           ports:
             - name: http

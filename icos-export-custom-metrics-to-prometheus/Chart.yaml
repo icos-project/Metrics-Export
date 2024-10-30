@@ -17,7 +17,7 @@
 #  and innovation programme under grant agreement No. 101070177.
 
 apiVersion: v2
-name: icos-export-custom-metrics-to-prometheus
+name: icos-metrics-export
 description: A Helm chart for Kubernetes
 
 # A chart can be either an 'application' or a 'library' chart.
