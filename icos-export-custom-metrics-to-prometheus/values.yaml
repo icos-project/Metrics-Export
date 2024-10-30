@@ -25,16 +25,16 @@ name: icos-export-metrics
 port: 9600
 
 image:
-  name: menelaoszetas/icos_export_metrics_api
+  name: harbor.res.eng.it/icos/meta-kernel/observability/metrics-export
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  # tag: "latest"
 
 service:
-  type: NodePort
-  ports:
-    - port: 9600
-      targetPort: 9600
-      nodePort: 30608
+  type: ClusterIP
+#  ports:
+#    - port: 9600
+#      targetPort: 9600
+#      nodePort: 30608
 
 # needs to be changed with the final one.
 INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL: 'http://10.160.3.160:3000/predict_metrics_utilisation'
