@@ -36,8 +36,8 @@ service:
       targetPort: 9600
       nodePort: 30608
 
-
-INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL: 'http://10.160.3.160:3000/'
+# needs to be changed with the final one.
+INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL: 'http://10.160.3.160:3000/predict_metrics_utilisation'
 INTELLIGENCE_API_MODEL_TRAINING_URL: 'http://10.160.3.160:3000/'
 
 # NKUA URL
