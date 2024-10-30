@@ -3,8 +3,8 @@ import os
 INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT = int(os.getenv('INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT', 60))
 
 INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL = os.getenv('INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL',
-                                                      'http://10.160.3.151:3000/')
-INTELLIGENCE_API_MODEL_TRAINING_URL = os.getenv('INTELLIGENCE_API_MODEL_TRAINING_URL', 'http://10.160.3.151:3000/')
+                                                      'http://10.160.3.160:3000/predict_metrics_utilisation')
+INTELLIGENCE_API_MODEL_TRAINING_URL = os.getenv('INTELLIGENCE_API_MODEL_TRAINING_URL', 'http://10.160.3.160:3000/')
 
 # NKUA
 # GRAFANA_API_BASE_URL = os.getenv('GRAFANA_API_BASE_URL', 'http://91.138.223.127:30009/')
