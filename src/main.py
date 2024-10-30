@@ -322,6 +322,7 @@ async def repeated_operation(request: CreateModelMetricItemRequest, exception_li
                 'labels'
             })
             data['labels']['model_confidence'] = model_results['model_confidence']
+            data['labels']['95%_confidence_interval'] = model_results['95%_confidence_interval']
             data['metric_type'] = model_metric_type
             data['states'] = request.model_states
             data['value'] = model_prediction
