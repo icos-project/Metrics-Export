@@ -26,7 +26,7 @@ spec:
               protocol: TCP
           env:
             - name: PORT
-              value: "{{ tpl .Values.port . }}"
+              value: "{{ tpl .Values.port . | quote }}"
             - name: INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL
               value: "{{ tpl .Values.INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL . }}"
             - name: INTELLIGENCE_API_MODEL_TRAINING_URL
