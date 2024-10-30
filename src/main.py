@@ -584,7 +584,7 @@ async def train_model_metric_endpoint(request: TrainModelMetricItemRequest):
         else:
             # step 1 --> using the service account at Grafana create the queries based on the telemetry metrics asked
             grafana_results = await grafana_request(request.telemetry_metrics)
-            # FRO MOCK --> create the csv based on the results and save them locally
+            # FOR MOCK --> create the csv based on the results and save them locally
             # create_and_save_csv_files_from_grafana(grafana_results=grafana_results, model_name=request.model_name)
             # step 2 --> save datasets to dataclay
             await create_and_save_dataframe_to_dataclay(grafana_results=grafana_results, model_name=request.model_name)
