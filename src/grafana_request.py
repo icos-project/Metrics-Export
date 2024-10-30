@@ -79,9 +79,7 @@ async def grafana_request(queries: list[str], steps_back: int = 0):
                     result = {'time': timestamps[_index], 'value': values[_index]}
                     _results.append(result)
                 results.append({_refId: _results})
-                print(results)
         return results
-
     else:
         print("Failed to fetch data: ", response.status_code, response.text)
 

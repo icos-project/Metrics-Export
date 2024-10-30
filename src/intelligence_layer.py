@@ -15,8 +15,9 @@ def prepare_results_for_model_input(results, steps_back):
     :return: An array with the results
     """
     refactored_data = {}
-    for item in results:
-        for key, value_list in item.items():
+    for index, item in enumerate(results):
+        key = 'input_{}'.format(index + 1)
+        for _, value_list in item.items():
             # Extract only the 'value' fields
             values = [entry['value'] for entry in value_list]
             # Fill with 0s if the list is shorter than the target_length
@@ -46,17 +47,25 @@ def call_intelligence_api_infer_model(request: CreateModelMetricItemRequest, inp
         'accept': 'application/json',
         'Content-Type': 'application/json',
     }
-    data = json.dumps({
+    data = {
         "model_tag": request.model_tag,
         "model_type": request.model_type.value,
         "steps_back": request.steps_back,
-        "history_sample_size": request.history_sample_size,
         "data_interruption": request.data_interruption,
         "history_data": request.history_data,
         "input_series": input_data
-    })
+    }
+
+    # Add history_data only if it has a value
+    if request.history_sample_size is not None:
+        data["history_sample_size"] = request.history_sample_size
+
+    data = json.dumps(data)
+
     try:
         response = requests.post(url, headers=headers, data=data)
+        # print('response.status_code: ', response.status_code)
+        # print('response.json(): ', response.json())
         return response.status_code, response.json()
     except Exception as e:
         # If model_result_status_code is not 200, exception must be thrown for error with intelligence API
