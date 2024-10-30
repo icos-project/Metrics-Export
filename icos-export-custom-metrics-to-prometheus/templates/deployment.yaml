@@ -26,26 +26,26 @@ spec:
               protocol: TCP
           env:
             - name: PORT
-              value: "{{ .Values.port }}"
+              value: "{{ tpl .Values.port . }}"
             - name: INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL
-              value: "{{ .Values.INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL }}"
+              value: "{{ tpl .Values.INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL . }}"
             - name: INTELLIGENCE_API_MODEL_TRAINING_URL
-              value: "{{ .Values.INTELLIGENCE_API_MODEL_TRAINING_URL }}"
+              value: "{{ tpl .Values.INTELLIGENCE_API_MODEL_TRAINING_URL . }}"
             - name: GRAFANA_API_BASE_URL
-              value: "{{ .Values.GRAFANA_API_BASE_URL }}"
+              value: "{{ tpl .Values.GRAFANA_API_BASE_URL . }}"
             - name: GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN
-              value: "{{ .Values.GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN }}"
+              value: "{{ tpl .Values.GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN . }}"
             - name: GRAFANA_DATASOURCE_UID
-              value: "{{ .Values.GRAFANA_DATASOURCE_UID }}"
+              value: "{{ tpl .Values.GRAFANA_DATASOURCE_UID . }}"
             - name: GRAFANA_INTERVAL_MS
-              value: "{{ .Values.GRAFANA_INTERVAL_MS }}"
+              value: "{{ tpl .Values.GRAFANA_INTERVAL_MS . }}"
             - name: INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
-              value: "{{ .Values.INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT }}"
+              value: "{{ tpl .Values.INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT . }}"
             - name: GRAFANA_UTC_OFFSET_SEC
-              value: "{{ .Values.GRAFANA_UTC_OFFSET_SEC }}"
+              value: "{{ tpl .Values.GRAFANA_UTC_OFFSET_SEC . }}"
             - name: DATACLAY_HOST
-              value: "{{ .Values.DATACLAY_HOST }}"
+              value: "{{ tpl .Values.DATACLAY_HOST . }}"
             - name: DATACLAY_USERNAME
-              value: "{{ .Values.DATACLAY_USERNAME }}"
+              value: "{{ tpl .Values.DATACLAY_USERNAME . }}"
             - name: DATACLAY_PASSWORD
-              value: "{{ .Values.DATACLAY_PASSWORD }}"
+              value: "{{ tpl .Values.DATACLAY_PASSWORD . }}"
