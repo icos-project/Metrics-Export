@@ -25,7 +25,7 @@ name: icos-export-metrics
 port: 9600
 
 image:
-  name: menelaoszetas/icos_metrics
+  name: menelaoszetas/icos_export_metrics_api
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
