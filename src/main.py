@@ -4,7 +4,7 @@ import time
 import threading
 from threading import Thread
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from prometheus_client import make_asgi_app
 from prometheus_client.multiprocess import MultiProcessCollector
 from prometheus_client.registry import Collector
@@ -334,14 +334,13 @@ async def repeated_operation(request: CreateModelMetricItemRequest, exception_li
         exception_list.append(e)
 
 
-async def create_model_telemetry_metric(request: CreateModelMetricItemRequest, exception_list, stop_event):
+async def create_model_telemetry_metric(request: CreateModelMetricItemRequest, exception_list):
     """
     create_model_telemetry_metric will receive a json payload to create a metric based on specific telemetry data
     that will be retrieved and a model that must exist at Intelligence layer.
 
     :param request: The json passed at create_model_metric route.
     :param exception_list: used to catch the error that could occur at the first execution.
-    :param stop_event: An Event to signal the alt execution.
 
     :return: None.
     """
@@ -364,7 +363,7 @@ def run_continuous_task(request: CreateModelMetricItemRequest, exception_list, s
         while not stop_event.is_set():
             start_time = time.time()
             # Run the repeated operation
-            asyncio.run(create_model_telemetry_metric(request, exception_list, stop_event))
+            asyncio.run(create_model_telemetry_metric(request, exception_list))
 
             # Break down the sleep time into smaller chunks to allow faster response to stop_event
             remaining_time = max(request.step_in_seconds - (time.time() - start_time), 0)
@@ -378,12 +377,11 @@ def run_continuous_task(request: CreateModelMetricItemRequest, exception_list, s
 
 # create a metric based telemetry metric provided and model that will run
 @app.post('/create_model_metric')
-async def create_model_metric_endpoint(request: CreateModelMetricItemRequest, background_tasks: BackgroundTasks):
+async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
     """
     create_model_metric route will receive a json payload to create a metric based on specific telemetry data
     that will be retrieved from Grafana and fed to an existing model at Intelligence layer.
 
-    :param background_tasks:
     :param request: The json passed will contain:
 
     - metric_type (mandatory): The metric type.
@@ -475,7 +473,7 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest, ba
         # Run the first cycle and send immediate response
         exception_list = []
 
-        await create_model_telemetry_metric(request, exception_list, stop_event)
+        await create_model_telemetry_metric(request, exception_list)
 
         if exception_list:
             raise exception_list[0]
