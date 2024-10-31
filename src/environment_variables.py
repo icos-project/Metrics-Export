@@ -1,4 +1,8 @@
 import os
+import logging
+# set a logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT = int(os.getenv('INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT', 60))
 

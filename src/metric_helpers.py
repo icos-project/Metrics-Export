@@ -60,7 +60,6 @@ class CreateModelMetricItemRequest(BaseModel):
     labels: Optional[Dict[str, str | int | float]] = {}
     telemetry_metrics: list[str]
     model_tag: str
-    model_type: ModelType
     model_states: Optional[list[str]] = []
     step_in_seconds: Optional[int] = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
     steps_back: int
