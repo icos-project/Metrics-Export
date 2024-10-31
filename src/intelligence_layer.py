@@ -22,7 +22,7 @@ def prepare_results_for_model_input(results, steps_back):
     refactored_data = {}
     for index, item in enumerate(results):
         # TODO: Change it back to input
-        key = 'lag_{}'.format(index + 1)
+        key = 'lag{}'.format(index + 1)
         # key = 'input_{}'.format(index + 1)
         for _, value_list in item.items():
             # Extract only the 'value' fields
