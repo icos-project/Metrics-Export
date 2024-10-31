@@ -17,19 +17,20 @@ headers = {
 
 
 async def grafana_request(queries: list[str], steps_back: int = 0):
+    # set the steps back concerning the number of results expected. For first iteration of train model the max amount
+    # is set
+    _steps_back = steps_back
+    if steps_back == 0:
+        _steps_back = 11000
+
     # create the default "from time" in epoch format where metric data will be fetched
-    from_time_in_epochs = int(time.time() * 1000) - 11000 * GRAFANA_INTERVAL_MS
+    from_time_in_epochs = int(time.time() * 1000) - _steps_back * GRAFANA_INTERVAL_MS
     # create the default "to time" in epoch format that represents the present time till witch metric data will be
     # fetched
     to_time_in_epochs = int(time.time() * 1000)
     # array to keep the reference id of each query
     _ref_ids = []
-    # set the steps back concerning the number of results expected. For first iteration of train model the max amount
-    # is set
 
-    _steps_back = steps_back
-    if steps_back == 0:
-        _steps_back = 11000
     _data = {
         "queries": [],
         "from": str(from_time_in_epochs),
