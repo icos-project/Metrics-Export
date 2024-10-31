@@ -95,13 +95,12 @@ needs (type of metrics). It accepts a json payload that must contain:
     5) `states` (optional): The list of states if an Enum metric is being set for the first time.
     6) `telemetry_metrics` (mandatory): The queries of the telemetry metrics from witch data will be retrieved.
     7) `model_tag` (mandatory): The name/tag of the model where the retrieved telemetry data will be sent.
-    8) `model_type` (mandatory): The type of the model where the retrieved telemetry data will be sent.
-    9) `step_in_seconds` (optional) -> int: The time distance between each sample at telemetry metric. Default is the update rate
+    8) `step_in_seconds` (optional) -> int: The time distance between each sample at telemetry metric. Default is the update rate
        of Prometheus.
-    10) `steps_back` (mandatory): The amount of samples that will be used.
-    11) `history_sample_size` (optional): TBD
-    12) `data_interruption` (optional): TBD
-    13) `history_data` (optional): TBD
+    9) `steps_back` (mandatory): The amount of samples that will be used.
+    10) `history_sample_size` (optional): TBD
+    11) `data_interruption` (optional): TBD
+    12) `history_data` (optional): TBD
   
    After getting the properties it creates the specific metric asked and registers it to the internal registry. According to the metric type value:
     - Counter = 1  
@@ -114,7 +113,6 @@ needs (type of metrics). It accepts a json payload that must contain:
         - states (ignored).
         - telemetry_metric (mandatory) -> string.
         - model_tag (mandatory) -> string.
-        - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
@@ -128,7 +126,6 @@ needs (type of metrics). It accepts a json payload that must contain:
         - states (ignored).
         - telemetry_metric (mandatory) -> string.
         - model_tag (mandatory) -> string.
-        - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
@@ -142,7 +139,6 @@ needs (type of metrics). It accepts a json payload that must contain:
         - states (ignored).
         - telemetry_metric (mandatory) -> string.
         - model_tag (mandatory) -> string.
-        - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
@@ -158,7 +154,6 @@ needs (type of metrics). It accepts a json payload that must contain:
           (passed only the first time).
         - telemetry_metric (mandatory) -> string.
         - model_tag (mandatory) -> string.
-        - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.

@@ -16,7 +16,7 @@ from src.metric_helpers import my_registry, MetricType, MetricItemRequest, Unreg
 from src.metric_types_functions import counter, gauge, info, enum
 from src.intelligence_layer import call_intelligence_api_infer_model, prepare_results_for_model_input, \
     call_intelligence_api_train_model
-from src.environment_variables import INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
+from src.environment_variables import INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT, logger
 
 
 # Using multiprocess collector for registry
@@ -28,8 +28,8 @@ def make_metrics_app(custom_registry):
 # Create app
 app = FastAPI(debug=False)
 # set a logger
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 # Initialize the custom registry
 registry = my_registry
 # Add prometheus asgi middleware to route /metrics requests
@@ -392,7 +392,6 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
     - states (optional): The list of states if an enum metric is being set for the first time.
     - telemetry_metrics (mandatory). The queries of the telemetry metrics from witch data will be retrieved.
     - model_tag (mandatory): The name of the model where the retrieved telemetry data will be sent.
-    - model_type (mandatory): The type of the model where the retrieved telemetry data will be sent.
     - step_in_seconds (optional): The time distance between each sample at telemetry metric. Default is the update rate
     of Prometheus.
     - steps_back (mandatory): The amount of samples that will be used.
@@ -412,7 +411,6 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - states (ignored).
         - telemetry_metrics (mandatory) -> list[str].
         - model_tag (mandatory) -> string.
-        - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
@@ -426,7 +424,6 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - states (ignored).
         - telemetry_metrics (mandatory) -> list[str].
         - model_tag (mandatory) -> string.
-        - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
@@ -440,7 +437,6 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
         - states (ignored).
         - telemetry_metrics (mandatory) -> list[str].
         - model_tag (mandatory) -> string.
-        - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
@@ -455,7 +451,6 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
          (passed only the first time)
         - telemetry_metrics (mandatory) -> list[str].
         - model_tag (mandatory) -> string.
-        - model_type (mandatory) -> string.
         - step_in_seconds (optional) -> int.
         - steps_back (mandatory) -> int.
         - history_sample_size (optional): int | None.
