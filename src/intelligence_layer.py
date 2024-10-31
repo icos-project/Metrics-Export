@@ -1,14 +1,10 @@
 import requests
 import json
 from fastapi import HTTPException
-from src.environment_variables import INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL, INTELLIGENCE_API_MODEL_TRAINING_URL
+from src.environment_variables import INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL, INTELLIGENCE_API_MODEL_TRAINING_URL, \
+    logger
 from src.metric_helpers import CreateModelMetricItemRequest, TrainModelMetricItemRequest
 
-# TODO: remove it
-import logging
-# set a logger
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 def prepare_results_for_model_input(results, steps_back):
     """
@@ -21,9 +17,7 @@ def prepare_results_for_model_input(results, steps_back):
     """
     refactored_data = {}
     for index, item in enumerate(results):
-        # TODO: Change it back to input
-        key = 'lag{}'.format(index + 1)
-        # key = 'input_{}'.format(index + 1)
+        key = 'input_{}'.format(index + 1)
         for _, value_list in item.items():
             # Extract only the 'value' fields
             values = [entry['value'] for entry in value_list]
@@ -56,7 +50,6 @@ def call_intelligence_api_infer_model(request: CreateModelMetricItemRequest, inp
     }
     data = {
         "model_tag": request.model_tag,
-        "model_type": request.model_type.value,
         "steps_back": request.steps_back,
         "data_interruption": request.data_interruption,
         "history_data": request.history_data,
