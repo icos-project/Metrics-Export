@@ -21,7 +21,9 @@ def prepare_results_for_model_input(results, steps_back):
     """
     refactored_data = {}
     for index, item in enumerate(results):
-        key = 'input_{}'.format(index + 1)
+        # TODO: Change it back to input
+        key = 'lag_{}'.format(index + 1)
+        # key = 'input_{}'.format(index + 1)
         for _, value_list in item.items():
             # Extract only the 'value' fields
             values = [entry['value'] for entry in value_list]
@@ -54,7 +56,7 @@ def call_intelligence_api_infer_model(request: CreateModelMetricItemRequest, inp
     }
     data = {
         "model_tag": request.model_tag,
-        # "model_type": request.model_type.value,
+        "model_type": request.model_type.value,
         "steps_back": request.steps_back,
         "data_interruption": request.data_interruption,
         "history_data": request.history_data,
