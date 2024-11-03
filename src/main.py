@@ -304,9 +304,9 @@ async def repeated_operation(request: CreateModelMetricItemRequest, exception_li
         grafana_results = await grafana_request(request.telemetry_metrics, steps_back)
 
         if grafana_results is not None and len(grafana_results) > 0:
-            # prepare the input data for the model
+            # step 2 --> prepare the input data for the model
             model_input_data = prepare_results_for_model_input(grafana_results, steps_back)
-            # run the model and save the result
+            # step 3 --> call Intelligence API to infer the model and save the result
             model_result_status_code, model_results = call_intelligence_api_infer_model(request, model_input_data)
             # If model_result_status_code is not 200, exception must be thrown for error with intelligence API
             # communication
@@ -326,6 +326,7 @@ async def repeated_operation(request: CreateModelMetricItemRequest, exception_li
             data['metric_type'] = model_metric_type
             data['states'] = request.model_states
             data['value'] = model_prediction
+            # step 4 --> post the result
             create_metric(MetricItemRequest(**data))
         else:
             # If result is None, exception must be thrown for empty data
