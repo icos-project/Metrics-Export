@@ -1,8 +1,7 @@
 import requests
 import json
 from fastapi import HTTPException
-from src.environment_variables import INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL, INTELLIGENCE_API_MODEL_TRAINING_URL, \
-    logger
+from src.environment_variables import INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL, INTELLIGENCE_API_MODEL_TRAINING_URL, logger
 from src.metric_helpers import CreateModelMetricItemRequest, TrainModelMetricItemRequest
 
 
@@ -62,13 +61,14 @@ def call_intelligence_api_infer_model(request: CreateModelMetricItemRequest, inp
 
     data = json.dumps(data)
 
-    logger.info('INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL: {}'.format(url))
-    logger.info('data: {}'.format(data))
     try:
+        logger.info('---')
+        logger.info('data: {}'.format(data))
         logger.info('sending request to Intelligence API')
         response = requests.post(url, headers=headers, data=data)
         logger.info('response.status_code: {}'.format(response.status_code))
         logger.info('response.json(): {}'.format(response.json()))
+        logger.info('---')
         return response.status_code, response.json()
     except Exception as e:
         # If model_result_status_code is not 200, exception must be thrown for error with intelligence API
