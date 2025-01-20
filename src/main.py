@@ -16,7 +16,7 @@ from src.metric_helpers import my_registry, MetricType, MetricItemRequest, Unreg
 from src.metric_types_functions import counter, gauge, info, enum
 from src.intelligence_layer import call_intelligence_api_infer_model, prepare_results_for_model_input, \
     call_intelligence_api_train_model
-from src.environment_variables import INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT, logger
+from src.environment_variables import INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT, logger, SECURITY_DISABLED
 
 
 # Using multiprocess collector for registry
@@ -28,7 +28,8 @@ def make_metrics_app(custom_registry):
 # Create app
 app = FastAPI(debug=False)
 # set keycloak middleware
-app.middleware("http")(validate_keycloak)
+if not SECURITY_DISABLED:
+    app.middleware("http")(validate_keycloak)
 # set a logger
 # logging.basicConfig(level=logging.INFO)
 # logger = logging.getLogger(__name__)
