@@ -55,9 +55,9 @@ spec:
             - name: DATACLAY_PASSWORD
               value: "{{ tpl .Values.DATACLAY_PASSWORD . }}"
             - name: PROMETHEUS_METRICS_DISABLED
-              value: "{{ tpl .Values.PROMETHEUS_METRICS_DISABLED | quote }}"
+              value: "{{ .Values.PROMETHEUS_METRICS_DISABLED | quote }}"
             - name: SECURITY_DISABLED
-              value: "{{ tpl .Values.SECURITY_DISABLED | quote }}"
+              value: "{{ .Values.SECURITY_DISABLED | quote }}"
             - name: KEYCLOAK_SERVER_URL
               value: "{{ tpl .Values.KEYCLOAK_SERVER_URL . }}"
             - name: KEYCLOAK_REALM_NAME
