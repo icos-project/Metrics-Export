@@ -53,3 +53,19 @@ spec:
               value: "{{ tpl .Values.DATACLAY_USERNAME . }}"
             - name: DATACLAY_PASSWORD
               value: "{{ tpl .Values.DATACLAY_PASSWORD . }}"
+            - name: PROMETHEUS_METRICS_DISABLED
+              value: "{{ tpl .Values.PROMETHEUS_METRICS_DISABLED . }}"
+            - name: SECURITY_DISABLED
+              value: "{{ tpl .Values.SECURITY_DISABLED . }}"
+            - name: KEYCLOAK_SERVER_URL
+              value: "{{ tpl .Values.KEYCLOAK_SERVER_URL . }}"
+            - name: KEYCLOAK_REALM_NAME
+              value: "{{ tpl .Values.KEYCLOAK_REALM_NAME . }}"
+            - name: KEYCLOAK_RESOURCE_SERVER_ID
+              value: "{{ tpl .Values.KEYCLOAK_RESOURCE_SERVER_ID . }}"
+            - name: KEYCLOAK_AUDIENCE
+              value: "{{ tpl .Values.KEYCLOAK_AUDIENCE . }}"
+            - name: KEYCLOAK_CLIENT_ID
+              value: "{{ tpl .Values.KEYCLOAK_CLIENT_ID . }}"
+            - name: KEYCLOAK_CLIENT_SECRET_KEY
+              value: "{{ tpl .Values.KEYCLOAK_CLIENT_SECRET_KEY . }}"
