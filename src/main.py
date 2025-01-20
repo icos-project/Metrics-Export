@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import time
 import threading
 from threading import Thread
@@ -11,6 +10,7 @@ from prometheus_client.registry import Collector
 
 from src.dataclay_dataframe_store import create_and_save_dataframe_to_dataclay
 from src.grafana_request import grafana_request
+from src.keycloak_middleware import validate_keycloak
 from src.metric_helpers import my_registry, MetricType, MetricItemRequest, UnregisterMetricItemRequest, \
     TrainModelMetricItemRequest, CreateModelMetricItemRequest, StopModelMetricItemRequest
 from src.metric_types_functions import counter, gauge, info, enum
@@ -27,6 +27,8 @@ def make_metrics_app(custom_registry):
 
 # Create app
 app = FastAPI(debug=False)
+# set keycloak middleware
+app.middleware("http")(validate_keycloak)
 # set a logger
 # logging.basicConfig(level=logging.INFO)
 # logger = logging.getLogger(__name__)

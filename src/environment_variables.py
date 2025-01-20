@@ -1,5 +1,6 @@
 import os
 import logging
+
 # set a logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,3 +31,13 @@ GRAFANA_DATASOURCE_UID = os.getenv('GRAFANA_DATASOURCE_UID', 'a151c53f-db08-4d10
 DATACLAY_HOST = os.getenv('DATACLAY_HOST', '127.0.0.1')
 DATACLAY_USERNAME = os.getenv('DATACLAY_USERNAME', 'testuser')
 DATACLAY_PASSWORD = os.getenv('DATACLAY_PASSWORD', 's3cret')
+
+PROMETHEUS_METRICS_DISABLED = os.getenv('PROMETHEUS_METRICS_DISABLED', False)
+SECURITY_DISABLED = os.getenv('SECURITY_DISABLED', False)
+
+KEYCLOAK_SERVER_URL = os.getenv('KEYCLOAK_SERVER_URL', 'http://localhost:8080')
+KEYCLOAK_REALM_NAME = os.getenv('KEYCLOAK_REALM_NAME', 'icos')
+KEYCLOAK_RESOURCE_SERVER_ID = os.getenv('KEYCLOAK_RESOURCE_SERVER_ID', 'Default Resource')
+KEYCLOAK_AUDIENCE = os.getenv('KEYCLOAK_AUDIENCE', 'Default Resource')
+KEYCLOAK_CLIENT_ID = os.getenv('KEYCLOAK_CLIENT_ID', 'coordination')
+KEYCLOAK_CLIENT_SECRET_KEY = os.getenv('KEYCLOAK_CLIENT_SECRET_KEY', 'Km4OI7UNO1i4iOwQfUBAJ6rW4INSEyFD')
