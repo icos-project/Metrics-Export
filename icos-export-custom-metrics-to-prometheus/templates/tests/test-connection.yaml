@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "ICOS-metrics-export.fullname" . }}:{{ .Values.port }}']
+      args: ['{{ include "ICOS-metrics-export.fullname" . }}:{{ .Values.port }}:healthz']
   restartPolicy: Never
