@@ -2,7 +2,7 @@ import json
 import time
 import requests
 from src.environment_variables import GRAFANA_API_BASE_URL, GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN, GRAFANA_INTERVAL_MS, \
-    GRAFANA_UTC_OFFSET_SEC
+    GRAFANA_UTC_OFFSET_SEC, GRAFANA_DATASOURCE_UID
 from src.utilities import format_metric_string
 
 # Grafana URL and Prometheus Data Source
@@ -47,7 +47,7 @@ async def grafana_request(queries: list[str], steps_back: int = 0):
                 "instant": False,
                 "datasource": {
                     "type": "prometheus",
-                    "uid": "a151c53f-db08-4d10-a3b8-97ef5f2d614f"
+                    "uid": GRAFANA_DATASOURCE_UID
                 },
                 "editorMode": "code",
                 "legendFormat": "__auto",
