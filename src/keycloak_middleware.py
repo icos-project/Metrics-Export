@@ -76,6 +76,8 @@ def should_perform_keycloak_validation(request_url: str):
         return False
     if request_url.startswith('/health'):
         return False
+    if request_url.startswith('/healthz'):
+        return False
     elif request_url.startswith('/docs'):
         return False
     elif request_url.startswith('/openapi.json'):

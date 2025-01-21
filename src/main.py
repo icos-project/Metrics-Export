@@ -43,6 +43,11 @@ threads = {}
 stop_events = {}
 
 
+@app.get("/healthz")
+async def health_check():
+    return {"status": "ok"}
+
+
 # Function to get an existing metric by name from the registry
 def get_metric_by_name_and_type(metric_name: str, metric_type: MetricType) -> None | Collector:
     """
