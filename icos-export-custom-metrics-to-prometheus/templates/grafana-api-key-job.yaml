@@ -1,0 +1,83 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ICOS-metrics-export.fullname" . }}-create-grafana-api-key
+  namespace: {{ .Release.Namespace }}  # Dynamically set namespace
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      volumes:
+        - name: shared-bin
+          emptyDir: {}
+      initContainers:
+        - name: copy-kubectl
+          image: bitnami/kubectl:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Copying 'kubectl' binary to shared volume...";
+              cp -f "$(which kubectl)" /shared-bin/kubectl;
+              echo "✅ Kubectl copied successfully!";
+          volumeMounts:
+            - name: shared-bin
+              mountPath: "/shared-bin/"
+      containers:
+        - name: generate-api-key
+          image: alpine:latest
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "Installing required tools..."
+              apk add --no-cache curl jq
+
+              echo "Retrieving Grafana Admin Password..."
+              /shared-bin/kubectl get secret --namespace {{ .Release.Namespace }} grafana \
+                -o jsonpath="{.data.admin-password}" | base64 -d > /tmp/grafana-pass
+
+              ADMIN_PASSWORD=$(cat /tmp/grafana-pass)
+              if [ -z "$ADMIN_PASSWORD" ]; then
+                echo "❌ Failed to retrieve Grafana admin password!"
+                exit 1
+              fi
+
+              echo "✅ Admin password retrieved successfully."
+
+              GRAFANA_URL="{{ .Values.GRAFANA_API_BASE_URL }}"  # Make this configurable in values.yaml
+              ADMIN_USER="admin"
+
+              echo "Checking for existing Grafana API Key..."
+              EXISTING_KEYS=$(curl -s -X GET "$GRAFANA_URL/api/auth/keys" \
+                -H "Authorization: Basic $(echo -n "$ADMIN_USER:$ADMIN_PASSWORD" | base64)")
+
+              EXISTING_KEY_ID=$(echo "$EXISTING_KEYS" | jq -r '.[] | select(.name=="grafana-api-export-metrics-key") | .id')
+
+              if [ -n "$EXISTING_KEY_ID" ]; then
+                echo "✅ Found existing API Key ID: $EXISTING_KEY_ID. Deleting it..."
+                curl -s -X DELETE "$GRAFANA_URL/api/auth/keys/$EXISTING_KEY_ID" \
+                  -H "Authorization: Basic $(echo -n "$ADMIN_USER:$ADMIN_PASSWORD" | base64)"
+                echo "✅ Old API Key deleted."
+              fi
+
+              echo "Generating a new Grafana API Key..."
+              API_KEY=$(curl -s -X POST "$GRAFANA_URL/api/auth/keys" \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Basic $(echo -n "$ADMIN_USER:$ADMIN_PASSWORD" | base64)" \
+                -d '{"name":"grafana-api-export-metrics-key","role":"Viewer"}' | jq -r .key)
+
+              if [ -z "$API_KEY" ] || [ "$API_KEY" = "null" ]; then
+                echo "❌ Failed to create API Key!"
+                exit 1
+              fi
+
+              echo "✅ API Key generated successfully."
+
+              echo "Storing API Key in Kubernetes Secret..."
+              /shared-bin/kubectl create secret generic grafana-api-export-metrics-key \
+                --from-literal=api_key="$API_KEY" \
+                -n {{ .Release.Namespace }} --dry-run=client -o yaml | /shared-bin/kubectl apply -f -
+
+              echo "✅ Secret created successfully."
+          volumeMounts:
+            - name: shared-bin
+              mountPath: "/shared-bin/"
