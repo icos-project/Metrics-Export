@@ -29,7 +29,10 @@ def make_metrics_app(custom_registry):
 app = FastAPI(debug=False)
 # set keycloak middleware
 if not SECURITY_DISABLED:
+    logger.info('Setting keycloak as Middleware')
     app.middleware("http")(validate_keycloak)
+else:
+    logger.info('Security disabled')
 # set a logger
 # logging.basicConfig(level=logging.INFO)
 # logger = logging.getLogger(__name__)
