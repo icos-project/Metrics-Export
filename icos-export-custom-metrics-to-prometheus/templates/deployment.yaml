@@ -22,6 +22,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
       {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
       volumes:
         - configMap:
@@ -103,3 +104,13 @@ spec:
                 secretKeyRef:
                   name: grafana-api-export-metrics-key
                   key: api_key
+          # Ensure the certificates are properly mounted in the container
+          {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
+          volumeMounts:
+              - mountPath: /etc/ssl/certs/icos-extra-certs.crt
+                name: extra-certs-bundle
+                subPath: {{ tpl .Values.extraCertsBundle.configmapKey . }}
+              - mountPath: /etc/ssl/certs/ca-certificates.crt
+                name: tmp
+                subPath: ca-certificates.crt
+          {{- end }}
