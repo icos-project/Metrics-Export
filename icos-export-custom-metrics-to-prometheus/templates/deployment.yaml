@@ -11,12 +11,6 @@ spec:
     metadata:
       labels:
         app: {{ include "ICOS-metrics-export.fullname" . }}
-      annotations:
-        # enable/disable the collection of logs from this pod
-        # Default: false
-        logs.icos.eu/scrape: "true"
-        # Ensure Deployment waits for the Secret before starting
-        checksum/grafana-api-secret: {{ include (print $.Template.BasePath "/grafana-api-key-job.yaml") . | sha256sum }}
     spec:
       {{- with .Values.imagePullSecrets | default .Values.global.imagePullSecrets }}
       imagePullSecrets:
@@ -28,31 +22,36 @@ spec:
         - configMap:
             name: {{ tpl .Values.extraCertsBundle.configmapName . }}
           name: extra-certs-bundle
-        - emptyDir: { }
+        - emptyDir: {}
           name: tmp
       {{- end }}
 
       {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
       initContainers:
-        - args:
-            - update-ca-certificates && cp -r /etc/ssl/certs/ca-certificates.crt /output/
+        - name: init-ca-certs
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /bin/sh
             - -c
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          name: init-ca-certs
+          args:
+            - |
+              cp /etc/ssl/certs/ca-certificates.crt /output/
+              cat /extra-certs/intermediate-ca.pem >> /output/ca-certificates.crt
+              cat /extra-certs/root-ca.pem >> /output/ca-certificates.crt
+              update-ca-certificates
           volumeMounts:
-            - mountPath: /usr/local/share/ca-certificates/icos-extra-certs.crt
+            - mountPath: /extra-certs/intermediate-ca.pem
               name: extra-certs-bundle
-              subPath: {{ tpl .Values.extraCertsBundle.configmapKey . }}
+              subPath: intermediate-ca.pem
+            - mountPath: /extra-certs/root-ca.pem
+              name: extra-certs-bundle
+              subPath: root-ca.pem
             - mountPath: /output
               name: tmp
               readOnly: false
       {{- end }}
 
-      #      nodeSelector:
-      #        tier: "controller"
       containers:
         - name: {{ include "ICOS-metrics-export.fullname" . }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -60,61 +59,15 @@ spec:
             - name: http
               containerPort: {{ .Values.port }}
               protocol: TCP
-          env:
-            - name: PORT
-              value: "{{ .Values.port }}"
-            - name: INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL
-              value: "{{ tpl .Values.INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL . }}"
-            - name: INTELLIGENCE_API_MODEL_TRAINING_URL
-              value: "{{ tpl .Values.INTELLIGENCE_API_MODEL_TRAINING_URL . }}"
-            - name: GRAFANA_API_BASE_URL
-              value: "{{ tpl .Values.GRAFANA_API_BASE_URL . }}"
-            - name: GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN
-              value: "{{ tpl .Values.GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN . }}"
-            - name: GRAFANA_DATASOURCE_UID
-              value: "{{ tpl .Values.GRAFANA_DATASOURCE_UID . }}"
-            - name: GRAFANA_INTERVAL_MS
-              value: "{{ .Values.GRAFANA_INTERVAL_MS }}"
-            - name: INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
-              value: "{{ .Values.INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT }}"
-            - name: GRAFANA_UTC_OFFSET_SEC
-              value: "{{ .Values.GRAFANA_UTC_OFFSET_SEC }}"
-            - name: DATACLAY_HOST
-              value: "{{ tpl .Values.DATACLAY_HOST . }}"
-            - name: DATACLAY_PASSWORD
-              value: "{{ tpl .Values.DATACLAY_PASSWORD . }}"
-            - name: PROMETHEUS_METRICS_DISABLED
-              value: "{{ .Values.PROMETHEUS_METRICS_DISABLED }}"
-            - name: SECURITY_DISABLED
-              value: "{{ .Values.SECURITY_DISABLED }}"
-            - name: KEYCLOAK_SERVER_URL
-              value: "{{ tpl .Values.KEYCLOAK_SERVER_URL . }}"
-            - name: KEYCLOAK_REALM_NAME
-              value: "{{ tpl .Values.KEYCLOAK_REALM_NAME . }}"
-            - name: KEYCLOAK_RESOURCE_SERVER_ID
-              value: "{{ tpl .Values.KEYCLOAK_RESOURCE_SERVER_ID . }}"
-            - name: KEYCLOAK_AUDIENCE
-              value: "{{ tpl .Values.KEYCLOAK_AUDIENCE . }}"
-            - name: KEYCLOAK_CLIENT_ID
-              value: "{{ tpl .Values.KEYCLOAK_CLIENT_ID . }}"
-            - name: KEYCLOAK_CLIENT_SECRET_KEY
-              value: "{{ tpl .Values.KEYCLOAK_CLIENT_SECRET_KEY . }}"
-            {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
-            - name: REQUESTS_CA_BUNDLE
-              value: /etc/ssl/certs/ca-certificates.crt
-            {{- end }}
-            - name: GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: grafana-api-export-metrics-key
-                  key: api_key
-          # Ensure the certificates are properly mounted in the container
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-icos-metrics-export-config
           {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
           volumeMounts:
-              - mountPath: /etc/ssl/certs/icos-extra-certs.crt
-                name: extra-certs-bundle
-                subPath: {{ tpl .Values.extraCertsBundle.configmapKey . }}
-              - mountPath: /etc/ssl/certs/ca-certificates.crt
-                name: tmp
-                subPath: ca-certificates.crt
+            - mountPath: /etc/ssl/certs/icos-extra-certs.crt
+              name: extra-certs-bundle
+              subPath: {{ tpl .Values.extraCertsBundle.configmapKey . }}
+            - mountPath: /etc/ssl/certs/ca-certificates.crt
+              name: tmp
+              subPath: ca-certificates.crt
           {{- end }}
