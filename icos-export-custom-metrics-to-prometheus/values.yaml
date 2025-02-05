@@ -97,6 +97,10 @@ podLabels: {
   app: icos-export-custom-metrics-to-prometheus
 }
 
+extraCertsBundle:
+  configmapName: ""
+  configmapKey: ""
+
 #podSecurityContext: {}
   # fsGroup: 2000
 
