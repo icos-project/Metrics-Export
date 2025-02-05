@@ -1,6 +1,11 @@
 import os
 import logging
 
+
+def str_to_bool(value):
+    return str(value).lower() in ("true", "1", "yes")
+
+
 # set a logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -36,8 +41,8 @@ DATACLAY_HOST = os.getenv('DATACLAY_HOST', '127.0.0.1')
 DATACLAY_USERNAME = os.getenv('DATACLAY_USERNAME', 'testuser')
 DATACLAY_PASSWORD = os.getenv('DATACLAY_PASSWORD', 's3cret')
 
-PROMETHEUS_METRICS_DISABLED = os.getenv('PROMETHEUS_METRICS_DISABLED', False)
-SECURITY_DISABLED = os.getenv('SECURITY_DISABLED', False)
+PROMETHEUS_METRICS_DISABLED = str_to_bool(os.getenv('PROMETHEUS_METRICS_DISABLED', 'False'))
+SECURITY_DISABLED = str_to_bool(os.getenv('SECURITY_DISABLED', 'False'))
 
 KEYCLOAK_SERVER_URL = os.getenv('KEYCLOAK_SERVER_URL', 'http://keycloak:8080')
 KEYCLOAK_REALM_NAME = os.getenv('KEYCLOAK_REALM_NAME', 'icos')
