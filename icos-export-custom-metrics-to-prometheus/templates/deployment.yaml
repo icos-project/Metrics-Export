@@ -15,13 +15,43 @@ spec:
         # enable/disable the collection of logs from this pod
         # Default: false
         logs.icos.eu/scrape: "true"
+        # Ensure Deployment waits for the Secret before starting
+        checksum/grafana-api-secret: {{ include (print $.Template.BasePath "/grafana-api-key-job.yaml") . | sha256sum }}
     spec:
       {{- with .Values.imagePullSecrets | default .Values.global.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-#      nodeSelector:
-#        tier: "controller"
+      {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
+      volumes:
+        - configMap:
+            name: {{ tpl .Values.extraCertsBundle.configmapName . }}
+          name: extra-certs-bundle
+        - emptyDir: { }
+          name: tmp
+      {{- end }}
+
+      {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
+      initContainers:
+        - args:
+            - update-ca-certificates && cp -r /etc/ssl/certs/ca-certificates.crt /output/
+          command:
+            - /bin/sh
+            - -c
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          name: init-ca-certs
+          volumeMounts:
+            - mountPath: /usr/local/share/ca-certificates/icos-extra-certs.crt
+              name: extra-certs-bundle
+              subPath: {{ tpl .Values.extraCertsBundle.configmapKey . }}
+            - mountPath: /output
+              name: tmp
+              readOnly: false
+      {{- end }}
+
+      #      nodeSelector:
+      #        tier: "controller"
       containers:
         - name: {{ include "ICOS-metrics-export.fullname" . }}
           image: "{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -68,3 +98,8 @@ spec:
               value: "{{ tpl .Values.KEYCLOAK_CLIENT_ID . }}"
             - name: KEYCLOAK_CLIENT_SECRET_KEY
               value: "{{ tpl .Values.KEYCLOAK_CLIENT_SECRET_KEY . }}"
+            - name: GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-api-export-metrics-key
+                  key: api_key

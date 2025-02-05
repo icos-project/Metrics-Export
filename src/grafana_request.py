@@ -1,8 +1,8 @@
 import json
 import time
 import requests
-from src.environment_variables import GRAFANA_API_BASE_URL, GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN, GRAFANA_INTERVAL_MS, \
-    GRAFANA_UTC_OFFSET_SEC, GRAFANA_DATASOURCE_UID
+from src.environment_variables import GRAFANA_API_BASE_URL, GRAFANA_INTERVAL_MS, GRAFANA_UTC_OFFSET_SEC, \
+    GRAFANA_DATASOURCE_UID, GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN
 from src.utilities import format_metric_string
 
 # Grafana URL and Prometheus Data Source
@@ -62,6 +62,7 @@ async def grafana_request(queries: list[str], steps_back: int = 0):
         )
 
     # Send POST request
+    print('headers: ', headers)
     response = requests.post(datasource_url, headers=headers, data=json.dumps(_data))
 
     # Check if request was successful
