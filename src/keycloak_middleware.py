@@ -28,6 +28,7 @@ keycloak_open_id = KeycloakOpenID(
     KEYCLOAK_REALM_NAME,
     KEYCLOAK_CLIENT_ID,
     KEYCLOAK_CLIENT_SECRET_KEY,
+    # verify="/etc/ssl/certs/ca-certificates.crt"
 )
 
 
