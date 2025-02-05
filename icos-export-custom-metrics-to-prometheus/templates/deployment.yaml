@@ -99,6 +99,10 @@ spec:
               value: "{{ tpl .Values.KEYCLOAK_CLIENT_ID . }}"
             - name: KEYCLOAK_CLIENT_SECRET_KEY
               value: "{{ tpl .Values.KEYCLOAK_CLIENT_SECRET_KEY . }}"
+            {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
+            - name: REQUESTS_CA_BUNDLE
+              value: /etc/ssl/certs/icos-extra-certs.crt
+            {{- end }}
             - name: GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN
               valueFrom:
                 secretKeyRef:
