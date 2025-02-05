@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-icos-metrics-export-config
+data:
+  PORT: "{{ .Values.port }}"
+  INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL: "{{ tpl .Values.INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL . }}"
+  INTELLIGENCE_API_MODEL_TRAINING_URL: "{{ tpl .Values.INTELLIGENCE_API_MODEL_TRAINING_URL . }}"
+  GRAFANA_API_BASE_URL: "{{ tpl .Values.GRAFANA_API_BASE_URL . }}"
+  GRAFANA_DATASOURCE_UID: "{{ tpl .Values.GRAFANA_DATASOURCE_UID . }}"
+  GRAFANA_INTERVAL_MS: "{{ .Values.GRAFANA_INTERVAL_MS }}"
+  INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT: "{{ .Values.INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT }}"
+  GRAFANA_UTC_OFFSET_SEC: "{{ .Values.GRAFANA_UTC_OFFSET_SEC }}"
+  DATACLAY_HOST: "{{ tpl .Values.DATACLAY_HOST . }}"
+  DATACLAY_PASSWORD: "{{ tpl .Values.DATACLAY_PASSWORD . }}"
+  PROMETHEUS_METRICS_DISABLED: "{{ .Values.PROMETHEUS_METRICS_DISABLED }}"
+  SECURITY_DISABLED: "{{ .Values.SECURITY_DISABLED }}"
+  KEYCLOAK_SERVER_URL: "{{ tpl .Values.KEYCLOAK_SERVER_URL . }}"
+  KEYCLOAK_REALM_NAME: "{{ tpl .Values.KEYCLOAK_REALM_NAME . }}"
+  KEYCLOAK_RESOURCE_SERVER_ID: "{{ tpl .Values.KEYCLOAK_RESOURCE_SERVER_ID . }}"
+  KEYCLOAK_AUDIENCE: "{{ tpl .Values.KEYCLOAK_AUDIENCE . }}"
+  KEYCLOAK_CLIENT_ID: "{{ tpl .Values.KEYCLOAK_CLIENT_ID . }}"
+  KEYCLOAK_CLIENT_SECRET_KEY: "{{ tpl .Values.KEYCLOAK_CLIENT_SECRET_KEY . }}"
+
+  {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
+  REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+  {{- end }}
