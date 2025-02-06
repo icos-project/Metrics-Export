@@ -47,8 +47,12 @@ spec:
 
               echo "✅ Admin password retrieved successfully."
 
-              GRAFANA_URL="{{ .Values.GRAFANA_API_BASE_URL }}"  # Make this configurable in values.yaml
+              GRAFANA_URL="{{ tpl .Values.global.controller.telemetry.grafanaUrl . }}"  # Make this configurable in values.yaml
               ADMIN_USER="admin"
+              
+              echo "GRAFANA_URL is set to: $GRAFANA_URL"
+              echo "ADMIN_USER is set to: $ADMIN_USER"
+              echo "ADMIN_PASSWORD is set to: $ADMIN_PASSWORD"
 
               echo "Checking for existing Grafana API Key..."
               EXISTING_KEYS=$(curl -s -X GET "$GRAFANA_URL/api/auth/keys" \
