@@ -36,7 +36,7 @@ spec:
               apk add --no-cache curl jq
 
               echo "Retrieving Grafana Admin Password..."
-              /shared-bin/kubectl get secret --namespace {{ .Release.Namespace }} {{ .Values.grafana.secretName }} \
+              /shared-bin/kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }} \
                 -o jsonpath="{.data.admin-password}" | base64 -d > /tmp/grafana-pass
 
               ADMIN_PASSWORD=$(cat /tmp/grafana-pass)
