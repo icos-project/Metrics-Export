@@ -101,6 +101,9 @@ extraCertsBundle:
   configmapName: ""
   configmapKey: ""
 
+grafana:
+  secretName: contrl1-grafana-admin
+
 #podSecurityContext: {}
   # fsGroup: 2000
 
