@@ -37,7 +37,7 @@ spec:
 
               echo "Retrieving Grafana Admin Password..."
               /shared-bin/kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }} \
-                -o jsonpath="{.data.admin-password}" | base64 -d > /tmp/grafana-pass
+                -o jsonpath="{.data.password}" | base64 -d > /tmp/grafana-pass
 
               ADMIN_PASSWORD=$(cat /tmp/grafana-pass)
               if [ -z "$ADMIN_PASSWORD" ]; then
