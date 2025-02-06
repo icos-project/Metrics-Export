@@ -47,7 +47,7 @@ spec:
 
               echo "✅ Admin password retrieved successfully."
 
-              GRAFANA_URL="{{ tpl .Values.global.controller.telemetry.grafanaUrl . }}"  # Make this configurable in values.yaml
+              GRAFANA_URL="{{ tpl .Values.GRAFANA_API_BASE_URL . }}"  # Make this configurable in values.yaml
               ADMIN_USER="admin"
               
               echo "GRAFANA_URL is set to: $GRAFANA_URL"
