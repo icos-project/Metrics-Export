@@ -28,25 +28,17 @@ spec:
 
       {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
       initContainers:
-        - name: init-ca-certs
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        - args:
+            - update-ca-certificates && cp -r /etc/ssl/certs/ca-certificates.crt /output/
           command:
             - /bin/sh
             - -c
-          args:
-            - |
-              cp /etc/ssl/certs/ca-certificates.crt /output/
-              cat /extra-certs/intermediate-ca.pem >> /output/ca-certificates.crt
-              cat /extra-certs/root-ca.pem >> /output/ca-certificates.crt
-              update-ca-certificates
+          image: <your image>
+          name: init-ca-certs
           volumeMounts:
-            - mountPath: /extra-certs/intermediate-ca.pem
+            - mountPath: /usr/local/share/ca-certificates/icos-extra-certs.crt
               name: extra-certs-bundle
-              subPath: intermediate-ca.pem
-            - mountPath: /extra-certs/root-ca.pem
-              name: extra-certs-bundle
-              subPath: root-ca.pem
+              subPath: {{ tpl .Values.extraCertsBundle.configmapKey . }}
             - mountPath: /output
               name: tmp
               readOnly: false
@@ -62,12 +54,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ .Release.Name }}-icos-metrics-export-config
-          {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
           volumeMounts:
+      {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
             - mountPath: /etc/ssl/certs/icos-extra-certs.crt
               name: extra-certs-bundle
               subPath: {{ tpl .Values.extraCertsBundle.configmapKey . }}
             - mountPath: /etc/ssl/certs/ca-certificates.crt
               name: tmp
               subPath: ca-certificates.crt
-          {{- end }}
+      {{- end }}
