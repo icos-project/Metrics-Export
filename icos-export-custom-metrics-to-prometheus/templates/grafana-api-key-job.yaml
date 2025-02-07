@@ -89,7 +89,7 @@ spec:
               
               # Generate a new Grafana API Key
               echo "Generating a new Grafana API Key..."
-              RAW_RESPONSE=$(curl -s -X POST "$GRAFANA_URL/api/auth/keys" -H "Content-Type: application/json" -H "Authorization: Basic $(echo -n "$ADMIN_USER:$ADMIN_PASSWORD" | base64)" -d '{"name":"grafana-api-export-metrics-key","role":"Viewer"}')
+              RAW_RESPONSE=$(curl -s -X POST "$GRAFANA_URL/api/auth/keys" -H "Content-Type: application/json" -H "Authorization: Basic $(echo -n "$ADMIN_USER:$ADMIN_PASSWORD" | base64)" -d '{"name":"grafana-api-export-metrics-key","role":"Admin"}')
 
               echo "RAW API RESPONSE: $RAW_RESPONSE"
               
