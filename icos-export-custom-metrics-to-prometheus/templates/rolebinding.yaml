@@ -11,5 +11,5 @@ roleRef:
   name: {{ include "ICOS-metrics-export.fullname" . }}-role
 subjects:
   - kind: ServiceAccount
-    name: {{ include "ICOS-metrics-export.serviceAccountName" . }}
+    name: {{ include "ICOS-metrics-export.fullname" . }}-sa
     namespace: {{ .Release.Namespace }}

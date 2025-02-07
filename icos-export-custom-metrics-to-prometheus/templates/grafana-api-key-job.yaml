@@ -10,7 +10,7 @@ metadata:
 spec:
   template:
     spec:
-      serviceAccountName: {{ include "ICOS-metrics-export.serviceAccountName" . }}
+      serviceAccountName: {{ include "ICOS-metrics-export.fullname" . }}-sa
       restartPolicy: Never
       volumes:
         - name: shared-bin
