@@ -62,8 +62,6 @@ async def grafana_request(queries: list[str], steps_back: int = 0):
         )
 
     # Send POST request
-    logger.info('headers: {}'.format(headers))
-    logger.info('data: {}'.format(json.dumps(_data)))
     response = requests.post(datasource_url, headers=headers, data=json.dumps(_data))
 
     # Check if request was successful
