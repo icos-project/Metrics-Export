@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Release.Namespace }}  # Dynamically set namespace
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-delete-policy": hook-succeeded
+#    "helm.sh/hook-delete-policy": hook-succeeded
 spec:
   template:
     spec:
