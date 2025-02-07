@@ -32,6 +32,10 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   # tag: "latest"
 
+serviceAccount:
+  create: true
+  name: ""  # Leave empty to use default naming convention
+
 service:
   type: ClusterIP
 #  ports:
