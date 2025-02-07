@@ -54,7 +54,7 @@ spec:
 
       containers:
         - name: {{ include "ICOS-metrics-export.fullname" . }}
-          image: "{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.repository  }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           ports:
             - name: http
               containerPort: {{ .Values.port }}
