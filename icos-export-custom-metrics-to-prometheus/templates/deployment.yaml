@@ -54,6 +54,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ .Release.Name }}-icos-metrics-export-config
+          env:
+            - name: GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-api-export-metrics-key
+                  key: api_key
           volumeMounts:
       {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
             - mountPath: /etc/ssl/certs/icos-extra-certs.crt
