@@ -27,7 +27,8 @@ name: icos-metrics-export
 port: 9600
 
 image:
-  name: harbor.res.eng.it/icos/meta-kernel/observability/metrics-export
+  repository: harbor.res.eng.it/icos/meta-kernel/observability/metrics-export
+  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   # tag: "latest"
 
