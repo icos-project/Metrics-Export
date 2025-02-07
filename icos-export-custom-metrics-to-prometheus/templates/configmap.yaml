@@ -22,6 +22,6 @@ data:
   KEYCLOAK_CLIENT_ID: "{{ tpl .Values.KEYCLOAK_CLIENT_ID . }}"
   KEYCLOAK_CLIENT_SECRET_KEY: "{{ tpl .Values.KEYCLOAK_CLIENT_SECRET_KEY . }}"
 
-  {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
+    {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
   REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
-  {{- end }}
+    {{- end }}
