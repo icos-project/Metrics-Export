@@ -2,7 +2,7 @@ import json
 import time
 import requests
 from src.environment_variables import GRAFANA_API_BASE_URL, GRAFANA_INTERVAL_MS, GRAFANA_UTC_OFFSET_SEC, \
-    GRAFANA_DATASOURCE_UID, GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN
+    GRAFANA_DATASOURCE_UID, GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN, logger
 from src.utilities import format_metric_string
 
 # Grafana URL and Prometheus Data Source
@@ -62,10 +62,12 @@ async def grafana_request(queries: list[str], steps_back: int = 0):
         )
 
     # Send POST request
-    print('headers: ', headers)
+    logger.info('headers: ', headers)
+    logger.info('data: ', json.dumps(_data))
     response = requests.post(datasource_url, headers=headers, data=json.dumps(_data))
 
     # Check if request was successful
+    logger.info('response.status_code: ', response.status_code)
     if response.status_code == 200:
         # Process response here
         res = response.json()
@@ -83,7 +85,7 @@ async def grafana_request(queries: list[str], steps_back: int = 0):
                 results.append({_refId: _results})
         return results
     else:
-        print("Failed to fetch data: ", response.status_code, response.text)
+        logger.info("Failed to fetch data: ", response.status_code, response.text)
 
 
 # def find_csv_files(starts_with):
