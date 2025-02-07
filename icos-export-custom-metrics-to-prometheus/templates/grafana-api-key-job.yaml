@@ -38,6 +38,7 @@ spec:
               curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
               chmod +x kubectl
               mv kubectl /usr/local/bin/
+              cp /usr/local/bin/kubectl /shared-bin/kubectl
               
               echo "Retrieving Grafana Admin Password..."
               /shared-bin/kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }} -o jsonpath="{.data.password}" | base64 -d > /tmp/grafana-pass
