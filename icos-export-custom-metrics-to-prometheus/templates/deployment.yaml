@@ -33,7 +33,7 @@ spec:
           command:
             - /bin/sh
             - -c
-          image: <your image>
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           name: init-ca-certs
           volumeMounts:
             - mountPath: /usr/local/share/ca-certificates/icos-extra-certs.crt
