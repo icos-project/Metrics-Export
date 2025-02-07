@@ -15,29 +15,6 @@ spec:
       volumes:
         - name: shared-bin
           emptyDir: {}
-#      initContainers:
-#        - name: wait-for-serviceaccount
-#          image: bitnami/kubectl:latest
-#          command: [ "/bin/sh", "-c" ]
-#          args:
-#            - |
-#              echo "Waiting for service account to be created..."
-#              until kubectl get serviceaccount {{ include "ICOS-metrics-export.fullname" . }}-sa -n {{ .Release.Namespace }}; do
-#                sleep 5
-#              done
-#              echo "Service account found!"
-#      initContainers:
-#        - name: copy-kubectl
-#          image: bitnami/kubectl:latest
-#          command: ["/bin/sh", "-c"]
-#          args:
-#            - |
-#              echo "Copying 'kubectl' binary to shared volume...";
-#              cp -f "$(which kubectl)" /shared-bin/kubectl;
-#              echo "✅ Kubectl copied successfully!";
-#          volumeMounts:
-#            - name: shared-bin
-#              mountPath: "/shared-bin/"
       containers:
         - name: generate-api-key
           image: alpine:latest
