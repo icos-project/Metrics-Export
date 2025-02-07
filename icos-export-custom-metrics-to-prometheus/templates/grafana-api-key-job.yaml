@@ -5,12 +5,11 @@ metadata:
   name: grafana-api-key-job
   namespace: {{ .Release.Namespace }}  # Dynamically set namespace
   annotations:
-    "helm.sh/hook": pre-install
+    "helm.sh/hook": pre-install,pre-upgrade,pre-upgrade
 spec:
   ttlSecondsAfterFinished: 600000
   template:
     spec:
-      ttlSecondsAfterFinished: 600000
       serviceAccountName: {{ include "ICOS-metrics-export.fullname" . }}-sa
       restartPolicy: Never
       volumes:
