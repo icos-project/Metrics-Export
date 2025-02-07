@@ -6,9 +6,8 @@ metadata:
   namespace: {{ .Release.Namespace }}  # Dynamically set namespace
   annotations:
     "helm.sh/hook": pre-install
-#    "helm.sh/hook-delete-policy": hook-succeeded
-
 spec:
+  ttlSecondsAfterFinished: 600
   template:
     spec:
       serviceAccountName: {{ include "ICOS-metrics-export.fullname" . }}-sa
