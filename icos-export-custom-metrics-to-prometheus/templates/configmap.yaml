@@ -21,6 +21,7 @@ data:
   KEYCLOAK_AUDIENCE: "{{ tpl .Values.KEYCLOAK_AUDIENCE . }}"
   KEYCLOAK_CLIENT_ID: "{{ tpl .Values.KEYCLOAK_CLIENT_ID . }}"
   KEYCLOAK_CLIENT_SECRET_KEY: "{{ tpl .Values.KEYCLOAK_CLIENT_SECRET_KEY . }}"
+  AGGREGATOR_URL: "{{ tpl .Values.AGGREGATOR_URL . }}"
 
     {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
   REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt

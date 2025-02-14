@@ -8,6 +8,7 @@ from prometheus_client import make_asgi_app
 from prometheus_client.multiprocess import MultiProcessCollector
 from prometheus_client.registry import Collector
 
+from src.aggregator_retrieve_nodes import aggregator_request
 from src.dataclay_dataframe_store import create_and_save_dataframe_to_dataclay
 from src.grafana_request import grafana_request
 from src.keycloak_middleware import validate_keycloak
@@ -30,7 +31,7 @@ app = FastAPI(debug=False)
 # set keycloak middleware
 if not SECURITY_DISABLED:
     logger.info('Setting keycloak as Middleware')
-    app.middleware("http")(validate_keycloak)
+    app.middleware('http')(validate_keycloak)
 else:
     logger.info('Security disabled')
 # set a logger
@@ -40,15 +41,15 @@ else:
 registry = my_registry
 # Add prometheus asgi middleware to route /metrics requests
 metrics_app = make_asgi_app(registry)
-app.mount("/metrics", metrics_app)
+app.mount('/metrics', metrics_app)
 # Global dictionary to store threads and stop events
 threads = {}
 stop_events = {}
 
 
-@app.get("/healthz")
+@app.get('/healthz')
 async def health_check():
-    return {"status": "ok"}
+    return {'status': 'ok'}
 
 
 # Function to get an existing metric by name from the registry
@@ -134,7 +135,7 @@ def get_full_labels_set(metric_name: Collector, request_labels: dict[str, str] |
         return None
 
 
-@app.get("/")
+@app.get('/')
 def read_root():
     return
 
@@ -385,12 +386,12 @@ def run_continuous_task(request: CreateModelMetricItemRequest, exception_list, s
                 time.sleep(sleep_interval)
                 remaining_time -= sleep_interval
     except Exception as e:
-        logger.error(f"Error in run_continuous_task: {e}")
+        logger.error('Error in run_continuous_task: {}'.format(e))
 
 
 # create a metric based telemetry metric provided and model that will run
 @app.post('/create_model_metric')
-async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
+async def create_dynamic_model_metric_endpoint(request: CreateModelMetricItemRequest):
     """
     create_model_metric route will receive a json payload to create a metric based on specific telemetry data
     that will be retrieved from Grafana and fed to an existing model at Intelligence layer.
@@ -494,13 +495,120 @@ async def create_model_metric_endpoint(request: CreateModelMetricItemRequest):
 
         return {'message': 'First cycle completed successfully. Metric creation started.'}
     except Exception as e:
-        http_err = 'An error occurred in create_model_metric_endpoint: {}'.format(e)
+        http_err = 'An error occurred in create_dynamic_model_metric_endpoint: {}'.format(e)
         logger.error(http_err)
         raise HTTPException(status_code=400, detail='{}'.format(e))
 
 
+async def create_static_model_metric_endpoint(request: CreateModelMetricItemRequest):
+    """
+    create_static_model_metric function will receive a json payload to create a metric based on specific telemetry data
+    that will be retrieved from Grafana and fed to an existing model at Intelligence layer.
+
+    :param request: The json passed will contain:
+
+    - metric_type (mandatory): The metric type.
+    - metric_name (mandatory): The name of the metric to be created or retrieved.
+    - metric_info (optional): The info of the metric to be created or retrieved.
+    - labels (optional): The dictionary of labels that will be set for the metric.
+    - states (optional): The list of states if an enum metric is being set for the first time.
+    - telemetry_metrics (mandatory). The queries of the telemetry metrics from witch data will be retrieved.
+    - model_tag (mandatory): The name of the model where the retrieved telemetry data will be sent.
+    - step_in_seconds (optional): The time distance between each sample at telemetry metric. Default is the update rate
+    of Prometheus.
+    - steps_back (mandatory): The amount of samples that will be used.
+    - history_sample_size (optional): TBD
+    - data_interruption (optional): TBD
+    - history_data (optional): TBD
+
+    According to the metric_type value:
+
+    - Counter = 1
+        Counter expects:
+        - metric_name (mandatory) -> string. If there is a suffix of _total on the metric name, it will be removed.
+        When exposing the time series for counter, a _total suffix will be added. This is for compatibility between
+        OpenMetrics and the Prometheus text format, as OpenMetrics requires the _total suffix.
+        - metric_info (optional) -> string | None.
+        - labels (optional) -> Optional[Dict[str, str | int | float]].
+        - states (ignored).
+        - telemetry_metrics (mandatory) -> list[str].
+        - model_tag (mandatory) -> string.
+        - step_in_seconds (optional) -> int.
+        - steps_back (mandatory) -> int.
+        - history_sample_size (optional): int | None.
+        - data_interruption (optional): bool = False.
+        - history_data (optional): list[list[int]].
+    - Gauge = 2
+        Gauge expects:
+        - metric_name (mandatory) -> string.
+        - metric_info (optional) -> string | None.
+        - labels (optional) -> Optional[Dict[str, str | int | float]].
+        - states (ignored).
+        - telemetry_metrics (mandatory) -> list[str].
+        - model_tag (mandatory) -> string.
+        - step_in_seconds (optional) -> int.
+        - steps_back (mandatory) -> int.
+        - history_sample_size (optional): int | None.
+        - data_interruption (optional): bool = False.
+        - history_data (optional): list[list[int]].
+    - Info = 3
+        Info expects:
+        - metric_name (mandatory) -> string.
+        - metric_info (optional) -> string | None.
+        - labels (optional) -> Optional[Dict[str, str | int | float]].
+        - states (ignored).
+        - telemetry_metrics (mandatory) -> list[str].
+        - model_tag (mandatory) -> string.
+        - step_in_seconds (optional) -> int.
+        - steps_back (mandatory) -> int.
+        - history_sample_size (optional): int | None.
+        - data_interruption (optional): bool = False.
+        - history_data (optional): list[list[int]].
+    - Enum = 4
+        Enum expects:
+        - metric_name (mandatory) -> string.
+        - metric_info (optional) -> string | None.
+        - labels (optional) -> Optional[Dict[str, str | int | float]].
+        - states (mandatory at creation of metric): the states that will be the available choice to set the state
+         (passed only the first time)
+        - telemetry_metrics (mandatory) -> list[str].
+        - model_tag (mandatory) -> string.
+        - step_in_seconds (optional) -> int.
+        - steps_back (mandatory) -> int.
+        - history_sample_size (optional): int | None.
+        - data_interruption (optional): bool = False.
+        - history_data (optional): list[list[int]].
+
+    :return: a json response 400 if error occurs or 200 if telemetry data are found, model inference is successful and
+    model results are sent to Prometheus/Thanos.
+    """
+    try:
+        if request.step_in_seconds and request.step_in_seconds < INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT:
+            request.step_in_seconds = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
+
+        # Create a stop event for this specific request
+        stop_event = threading.Event()
+        # Run the first cycle and send immediate response
+        exception_list = []
+        await create_model_telemetry_metric(request, exception_list)
+
+        if exception_list:
+            raise exception_list[0]
+
+        # Start a new thread to run the continuous task in the background and store it
+        task_thread = Thread(target=run_continuous_task, args=(request, exception_list, stop_event))
+        task_thread.start()
+        thread_name = request.metric_name + '_{}_{}_{}'\
+            .format(request.labels['icos_agent_id'], request.labels['node_name'], request.labels['icos_host_id'])
+        threads[thread_name] = task_thread  # Store the thread itself
+        stop_events[thread_name] = stop_event
+    except Exception as e:
+        err = 'An error occurred in create_static_model_metric_endpoint: {}'.format(e)
+        logger.error(err)
+
+
 @app.post('/stop_model_metrics')
-def stop_model_metrics(request: StopModelMetricItemRequest):
+async def stop_dynamic_model_metrics(request: StopModelMetricItemRequest):
     """
     stop_model_metrics route will receive a json payload to stop the metric creations based on specific telemetry data.
 
@@ -533,12 +641,66 @@ def stop_model_metrics(request: StopModelMetricItemRequest):
         raise HTTPException(status_code=400, detail='{}'.format(e))
 
 
-@app.on_event("shutdown")
-def shutdown_event():
+async def stop_static_model_metrics(request: StopModelMetricItemRequest, labels):
+    """
+    stop_static_model_metrics function will receive a json payload to stop the metric creations based on specific telemetry data.
+
+    :param request: The json passed will contain:
+    - metric_names (mandatory): A list with the names of the metrics to be stopped.
+    :param labels: the specific metric labels
+
+    :return: a json response 200 if the metric creations are stopped successfully even if metric may not exist.
+    """
+    try:
+        for request_metric_name in request.metric_names:
+            # Get the metric name
+            metric_name = request_metric_name.strip() if request_metric_name else None
+            if not metric_name:
+                raise Exception('metric_name is required.')
+
+            # Stop the corresponding thread
+            thread_name = request.metric_name + '_{}_{}_{}' \
+                .format(request.labels['icos_agent_id'], request.labels['node_name'], request.labels['icos_host_id'])
+            if thread_name in stop_events:
+                stop_events[thread_name].set()
+                threads[thread_name].join()
+                # Clean up the global dictionaries
+                del threads[thread_name]
+                del stop_events[thread_name]
+            # else:
+            #     raise HTTPException(status_code=400, detail='Metric not found.')
+            logger.info('Static metric stop for {}, icos_agent_id: {}, node_name: {}, stopped successfully.'
+                        .format(metric_name, labels['icos_agent_id'], labels['node_name']))
+    except Exception as e:
+        err = 'Static metric stop for {}, icos_agent_id: {}, node_name: {}, failed to stop: {}.'\
+            .format(request.metric_names[0].strip(), labels['icos_agent_id'], labels['node_name'], e)
+        logger.error(err)
+
+
+@app.on_event('shutdown')
+async def shutdown_event():
+    logger.info('Shutting down application...')
+    # Set stop flags for all threads
     for event in stop_events.values():
         event.set()
-    for thread in threads.values():
-        thread.join()
+    # Cancel and await all async tasks
+    for task in list(threads.values()):  # Convert to list to prevent modification errors
+        if isinstance(task, asyncio.Task):
+            task.cancel()
+            try:
+                await asyncio.wait_for(task, timeout=5)  # Force timeout if it hangs
+            except asyncio.TimeoutError:
+                logger.warning('Task {} did not cancel in time!'.format(task.get_name()))
+            except asyncio.CancelledError:
+                logger.info('Task {} cancelled.'.format(task.get_name()))
+    # Forcefully stop hanging threads
+    for thread in list(threads.values()):
+        if isinstance(thread, threading.Thread):
+            logger.info('Joining thread: {}'.format(thread.name))
+            thread.join(timeout=1)  # Allow up to 1 seconds
+            if thread.is_alive():
+                logger.warning('Thread {} did not terminate in time!'.format(thread.name))
+    logger.info('Shutdown complete.')
 
 
 # TODO: update the TBD.
@@ -648,7 +810,138 @@ async def continue_training_and_create_metric(request, dataset_name):
         data['model_type'] = request.model_type
         data['model_states'] = metric_states
 
-        await create_model_metric_endpoint(CreateModelMetricItemRequest(**data))
+        await create_dynamic_model_metric_endpoint(CreateModelMetricItemRequest(**data))
 
     except Exception as e:
-        logger.error(f"Error in continue_training_and_create_metric: {e}")
+        logger.error('Error in continue_training_and_create_metric: {}'.format(e))
+
+
+# ======================================================================================================================
+# ============================================ Static Metrics functionality ============================================
+# ======================================================================================================================
+async def periodic_aggregator_check(stop_event: threading.Event):
+    """
+    Periodically fetches node data and processes metrics every 5 minutes.
+    """
+    while not stop_event.is_set():
+        try:
+            # Fetch updated nodes
+            logger.info('Running periodic aggregator request...')
+            new_nodes, removed_nodes = aggregator_request()
+
+            # Process new nodes (Start metrics)
+            if new_nodes:
+                logger.info('Starting metrics for {} nodes.'.format(len(new_nodes)))
+                await process_and_send_static_metrics(new_nodes)
+
+            # Process removed nodes (Stop metrics)
+            if removed_nodes:
+                logger.info('Stopping metrics for {} removed nodes.'.format(len(removed_nodes)))
+                await process_and_stop_static_metrics(removed_nodes)
+
+        except Exception as e:
+            logger.error('Error in periodic aggregator check: {}'.format(e))
+
+        # Wait 5 minutes before running again
+        await asyncio.sleep(300)
+
+
+metric_definitions = [
+    {
+        'metric_name': 'intelligence_node_cpu_utilization_prediction',
+        'model_tag': 'metrics_utilization_model_xgb:latest',
+        'step_in_seconds': 60,
+        'steps_back': 12,
+        'labels': {
+            'model_name': 'metrics_utilization_model_xgb:latest',
+            'model_type': 'XGB',
+            'step_in_seconds': '60',
+            'sequence_size': '12'
+        },
+        'telemetry_template': '(1 - avg(irate(node_cpu_seconds_total{{mode="idle", icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[2m])) without (cpu,mode)) * 100'
+    },
+    {
+        'metric_name': 'intelligence_node_memory_utilization_prediction',
+        'model_tag': 'metrics_utilization_model_xgb:latest',
+        'step_in_seconds': 60,
+        'steps_back': 12,
+        'labels': {
+            'model_name': 'metrics_utilization_model_xgb:latest',
+            'model_type': 'XGB',
+            'step_in_seconds': '60',
+            'sequence_size': '12'
+        },
+        'telemetry_template': '100 * (1 - ((avg_over_time(node_memory_MemFree_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m]) + '
+                              'avg_over_time(node_memory_Cached_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m]) + '
+                              'avg_over_time(node_memory_Buffers_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m])) / '
+                              'avg_over_time(node_memory_MemTotal_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m])))'
+    },
+    # {
+    #     'metric_name': 'intelligence_node_energy_consumption_prediction',
+    #     'labels': {},
+    #     'telemetry_template': 'scaph_host_power_microwatts{icos_agent_id=\"{icos_agent_id}\", icos_host_id=\"{icos_host_id}\"}'
+    # }
+]
+
+
+async def process_and_send_static_metrics(nodes):
+    """
+    Processes nodes and sends multiple metric creation requests asynchronously.
+    """
+    for node in nodes:
+        icos_agent_id = node['icos_agent_id']
+        node_name = node['node_name']
+        icos_host_id = node['icos_host_id']
+
+        for metric in metric_definitions:
+            labels = {'icos_agent_id': icos_agent_id, 'node_name': node_name, 'icos_host_id': icos_host_id}
+            labels.update(metric['labels'])  # Merge any additional labels
+
+            telemetry_metrics = [metric['telemetry_template'].format(
+                icos_agent_id=icos_agent_id, icos_host_id=icos_host_id
+            )]
+
+            request = CreateModelMetricItemRequest(
+                metric_type=MetricType.Gauge,
+                metric_name=metric['metric_name'],
+                labels=labels,
+                telemetry_metrics=telemetry_metrics,
+                model_tag=metric['model_tag'],
+                step_in_seconds=metric['step_in_seconds'],
+                steps_back=metric['steps_back']
+            )
+
+            logger.info('Starting creation of metric {} for icos_agent_id: {}, node_name: {} and icos_host_id: {}'
+                        .format(metric['metric_name'], icos_agent_id, node_name, icos_host_id))
+            await create_static_model_metric_endpoint(request)
+
+
+async def process_and_stop_static_metrics(nodes):
+    """
+    Processes nodes and sends multiple metric stop requests asynchronously.
+    """
+    for node in nodes:
+        icos_agent_id = node['icos_agent_id']
+        node_name = node['node_name']
+        icos_host_id = node['icos_host_id']
+
+        for metric in metric_definitions:
+            labels = {'icos_agent_id': icos_agent_id, 'node_name': node_name, 'icos_host_id': icos_host_id}
+            request = StopModelMetricItemRequest(
+                metric_names=[metric['metric_name']],
+            )
+            await stop_static_model_metrics(request, labels)
+            logger.info('Stopping metric {} for icos_agent_id {}, node_name: {} and icos_host_id: {}'
+                        .format(metric['metric_name'], icos_agent_id, node_name, icos_host_id))
+
+
+@app.on_event('startup')
+async def startup_event():
+    """
+    Starts the periodic background task when the server starts.
+    """
+    # Create a stop event for this specific request
+    stop_event = threading.Event()
+    stop_events['static_metrics'] = stop_event
+    task = asyncio.create_task(periodic_aggregator_check(stop_event))
+    threads['static_metrics'] = task
