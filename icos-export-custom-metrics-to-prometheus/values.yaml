@@ -82,6 +82,8 @@ KEYCLOAK_AUDIENCE: 'Default Resource'
 KEYCLOAK_CLIENT_ID: 'coordination'
 KEYCLOAK_CLIENT_SECRET_KEY: 'Km4OI7UNO1i4iOwQfUBAJ6rW4INSEyFD'
 
+AGGREGATOR_URL: 'http://10.160.3.20:30400/'
+
 #imagePullSecrets: []
 #nameOverride: ""
 #fullnameOverride: ""
