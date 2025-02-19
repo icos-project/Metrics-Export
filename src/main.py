@@ -333,7 +333,7 @@ async def repeated_operation(request: CreateModelMetricItemRequest, exception_li
                 'metric_info',
                 'labels'
             })
-            data['labels']['model_confidence'] = model_results['model_confidence']
+            data['labels']['model_confidence'] = model_results.get('model_confidence', '')
             # data['labels']['confidence_interval_95'] = model_results['95%_confidence_interval']
             data['metric_type'] = model_metric_type
             data['states'] = request.model_states
@@ -876,11 +876,19 @@ metric_definitions = [
                               'avg_over_time(node_memory_Buffers_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m])) / '
                               'avg_over_time(node_memory_MemTotal_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m])))'
     },
-    # {
-    #     'metric_name': 'intelligence_node_energy_consumption_prediction',
-    #     'labels': {},
-    #     'telemetry_template': 'scaph_host_power_microwatts{icos_agent_id=\"{icos_agent_id}\", icos_host_id=\"{icos_host_id}\"}'
-    # }
+    {
+        'metric_name': 'intelligence_node_energy_consumption_prediction',
+        'model_tag': 'energy_consumption_forecast_xgb:latest',
+        'step_in_seconds': 60,
+        'steps_back': 12,
+        'labels': {
+            'model_name': 'energy_consumption_forecast_xgb:latest',
+            'model_type': 'XGB',
+            'step_in_seconds': '60',
+            'sequence_size': '12'
+         },
+        'telemetry_template': 'scaph_host_power_microwatts{{icos_agent_id="{icos_agent_id}", k8s_node_name="{node_name}"}}'
+    }
 ]
 
 
@@ -898,7 +906,7 @@ async def process_and_send_static_metrics(nodes):
             labels.update(metric['labels'])  # Merge any additional labels
 
             telemetry_metrics = [metric['telemetry_template'].format(
-                icos_agent_id=icos_agent_id, icos_host_id=icos_host_id
+                icos_agent_id=icos_agent_id, icos_host_id=icos_host_id, node_name=node_name
             )]
 
             request = CreateModelMetricItemRequest(
