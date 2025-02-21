@@ -64,6 +64,8 @@ def call_intelligence_api_infer_model(request: CreateModelMetricItemRequest, inp
     try:
         logger.info('Sending request to Intelligence API - Infer with data: {}'.format(data))
         response = requests.post(url, headers=headers, data=data)
+
+        logger.info('Response received from Intelligence API - Status Code: {} Response: {}'.format(response.status_code, response.json()))
         return response.status_code, response.json()
     except Exception as e:
         # If model_result_status_code is not 200, exception must be thrown for error with intelligence API
