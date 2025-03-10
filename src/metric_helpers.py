@@ -103,3 +103,7 @@ class TrainModelMetricItemRequest(BaseModel):
     model_parameters: ArimaModelParameters | XGBModelParameters
     telemetry_metrics: list[str]
 
+
+class ShowModelsRequest(BaseModel):
+    model: str = 'all'
+

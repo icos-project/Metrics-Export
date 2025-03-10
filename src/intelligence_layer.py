@@ -1,8 +1,9 @@
 import requests
 import json
 from fastapi import HTTPException
-from src.environment_variables import INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL, INTELLIGENCE_API_MODEL_TRAINING_URL, logger
-from src.metric_helpers import CreateModelMetricItemRequest, TrainModelMetricItemRequest
+from src.environment_variables import INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL, INTELLIGENCE_API_MODEL_TRAINING_URL, \
+    logger, INTELLIGENCE_API_SHOW_MODELS
+from src.metric_helpers import CreateModelMetricItemRequest, TrainModelMetricItemRequest, ShowModelsRequest
 
 
 def prepare_results_for_model_input(results, steps_back):
@@ -110,6 +111,40 @@ def call_intelligence_api_train_model(request: TrainModelMetricItemRequest, inpu
         # If model_result_status_code is not 200, exception must be thrown for error with intelligence API
         # communication
         message = 'Intelligence API error. Error: {}'.format(e)
+        # Raise the HTTPException for FastAPI to handle
+        raise HTTPException(status_code=400, detail='{}'.format(message))
+
+
+def call_intelligence_api_show_models(request: ShowModelsRequest):
+    """
+    This function will call the intelligence api endpoint to fetch the models that are stored at model registry.
+
+    :param request: The json passed will contain:
+    - model (optional): A string of the model(s) total to show.
+
+    :return: Response status code and response data as a json.
+    """
+    url = INTELLIGENCE_API_SHOW_MODELS
+    headers = {
+        'accept': 'application/json',
+        'Content-Type': 'application/json',
+    }
+    data = {
+        "model": request.model,
+    }
+
+    data = json.dumps(data)
+
+    try:
+        logger.info('Sending request to Intelligence API - Show Models with data: {}'.format(data))
+        response = requests.post(url, headers=headers, data=data)
+
+        logger.info('Response received from Intelligence API - Status Code: {} Response: {}'.format(response.status_code, response.json()))
+        return response.status_code, response.json()
+    except Exception as e:
+        # If model_result_status_code is not 200, exception must be thrown for error with intelligence API
+        # communication
+        message = 'Intelligence API error or endpoint does not exist. Error: {}'.format(e)
         # Raise the HTTPException for FastAPI to handle
         raise HTTPException(status_code=400, detail='{}'.format(message))
 
