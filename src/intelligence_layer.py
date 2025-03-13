@@ -132,7 +132,6 @@ def call_intelligence_api_show_models(request: ShowModelsRequest):
     data = {
         "model": request.model,
     }
-
     data = json.dumps(data)
 
     try:

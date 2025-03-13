@@ -968,7 +968,7 @@ async def show_models(request: ShowModelsRequest):
     """
     try:
         response_code, response_data = call_intelligence_api_show_models(request)
-        return {'data': response_data}
+        return response_data
     except Exception as e:
         http_err = 'An error occurred in show_models: {}'.format(e)
         logger.error(http_err)
