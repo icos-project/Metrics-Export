@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Release.Namespace }}  # Dynamically set namespace
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-weight": "1"
 spec:
   ttlSecondsAfterFinished: 600000
   template:
@@ -29,6 +29,13 @@ spec:
               chmod +x kubectl
               mv kubectl /usr/local/bin/
               cp /usr/local/bin/kubectl /shared-bin/kubectl
+              
+              echo "Waiting for Grafana to be ready..."
+              while ! /shared-bin/kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }} &>/dev/null; do
+                echo "Grafana secret not found. Retrying in 10 seconds..."
+                sleep 10
+              done
+              echo "Grafana is ready!"
               
               echo "Retrieving Grafana Admin Password..."
               /shared-bin/kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }} -o jsonpath="{.data.password}" | base64 -d > /tmp/grafana-pass
