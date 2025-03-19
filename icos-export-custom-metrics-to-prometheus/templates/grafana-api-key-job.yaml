@@ -22,6 +22,8 @@ spec:
               kubectl version --client
 
               echo "📌 Waiting for Grafana secret..."
+              echo "! kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }}"
+              
               while ! kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }} &>/dev/null; do
                 echo "Grafana secret not found. Retrying in 10 seconds..."
                 sleep 10
