@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "ICOS-metrics-export.fullname" . }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "2"
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
