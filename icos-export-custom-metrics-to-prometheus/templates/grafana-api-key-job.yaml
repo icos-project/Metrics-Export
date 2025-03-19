@@ -87,7 +87,7 @@ spec:
                     exit 1
                   fi
                 fi
-              don
+              done
 
               # Store the API Key in a Kubernetes Secret
               echo "🗝️ Storing API Key in Kubernetes Secret..."
