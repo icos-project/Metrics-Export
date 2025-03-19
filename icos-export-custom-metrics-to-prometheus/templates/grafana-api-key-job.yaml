@@ -25,12 +25,28 @@ spec:
           args:
             - |
               echo "Installing required tools..."
-              apk add --no-cache curl jq
-              
+              apk add --no-cache curl jq coreutils
+
+              echo "Downloading kubectl..."
               curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+              echo "Checking file integrity..."
+              if [ ! -s kubectl ]; then
+                echo "❌ Download failed! kubectl is empty or corrupt."
+                exit 1
+              fi
+
+              echo "Setting permissions..."
               chmod +x kubectl
-              mv kubectl /usr/local/bin/
-              cp /usr/local/bin/kubectl /shared-bin/kubectl
+              ls -lah kubectl  # Debug check
+
+              echo "Moving kubectl to /usr/local/bin/"
+              mv kubectl /usr/local/bin/kubectl
+
+              echo "Verifying kubectl..."
+              /usr/local/bin/kubectl version --client || { echo "❌ ERROR: kubectl is still corrupted!"; exit 1; }
+
+              echo "✅ kubectl installed successfully!"
               
               echo "Waiting for Grafana to be ready..."
               echo "! /shared-bin/kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }}"
