@@ -51,26 +51,27 @@ spec:
           command: [ "sh", "-c" ]
           args:
             - |
-              TIMEOUT=900  # Set a timeout (e.g., 900 seconds = 15 minutes)
+              TIMEOUT=900  # Set a timeout (900 seconds = 15 minutes)
               ELAPSED=0
               echo "Waiting for Grafana API key secret..."
               ReleaseNamespace="{{ .Release.Namespace }}"
               echo "Release Namespace: ${ReleaseNamespace}"
               
-              condition="! kubectl get secret grafana-api-export-metrics-key -n {{ .Release.Namespace }}"
-              echo "condition: ${condition}"
+              # Use the Kubernetes API to check if the secret exists
+              while ! wget -q --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+                        --header="Accept: application/json" \
+                        --no-check-certificate \
+                        https://kubernetes.default.svc/api/v1/namespaces/{{ .Release.Namespace }}/secrets/grafana-api-export-metrics-key -O /dev/null; do
               
-              while ! kubectl get secret grafana-api-export-metrics-key -n {{ .Release.Namespace }}; do
                 echo "Secret not found. Retrying in 5s..."
                 sleep 5
                 ELAPSED=$((ELAPSED+5))
                 if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
                   echo "❌ Timeout reached while waiting for the secret. Exiting."
-                  exit 1  # Fail the deployment if the secret is missing
+                  exit 1
                 fi
               done
               echo "✅ Secret found. Proceeding..."
-
       containers:
         - name: {{ include "ICOS-metrics-export.fullname" . }}
           image: "{{ .Values.image.repository  }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
