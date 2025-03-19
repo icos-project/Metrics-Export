@@ -26,8 +26,8 @@ spec:
           name: tmp
       {{- end }}
 
-      {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
       initContainers:
+      {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
         - args:
             - update-ca-certificates && cp -r /etc/ssl/certs/ca-certificates.crt /output/
           command:
@@ -43,6 +43,24 @@ spec:
               name: tmp
               readOnly: false
       {{- end }}
+        - name: wait-for-grafana-secret
+          image: busybox
+          command: [ "sh", "-c" ]
+          args:
+            - |
+              TIMEOUT=900  # Set a timeout (e.g., 900 seconds = 15 minutes)
+              ELAPSED=0
+              echo "Waiting for Grafana API key secret..."
+              while ! kubectl get secret grafana-api-export-metrics-key -n {{ .Release.Namespace }}; do
+                echo "Secret not found. Retrying in 5s..."
+                sleep 5
+                ELAPSED=$((ELAPSED+5))
+                if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+                  echo "❌ Timeout reached while waiting for the secret. Exiting."
+                  exit 1  # Fail the deployment if the secret is missing
+                fi
+              done
+              echo "✅ Secret found. Proceeding..."
 
       containers:
         - name: {{ include "ICOS-metrics-export.fullname" . }}
