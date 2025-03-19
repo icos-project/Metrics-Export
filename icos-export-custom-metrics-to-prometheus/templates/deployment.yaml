@@ -51,6 +51,12 @@ spec:
               TIMEOUT=900  # Set a timeout (e.g., 900 seconds = 15 minutes)
               ELAPSED=0
               echo "Waiting for Grafana API key secret..."
+              ReleaseNamespace="{{ .Release.Namespace }}"
+              echo "Release Namespace: ${ReleaseNamespace}"
+              
+              condition="! kubectl get secret grafana-api-export-metrics-key -n {{ .Release.Namespace }}"
+              echo "condition: ${condition}"
+              
               while ! kubectl get secret grafana-api-export-metrics-key -n {{ .Release.Namespace }}; do
                 echo "Secret not found. Retrying in 5s..."
                 sleep 5
