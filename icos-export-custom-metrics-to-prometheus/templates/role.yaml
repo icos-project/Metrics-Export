@@ -12,3 +12,6 @@ rules:
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
+  - apiGroups: [ "apps" ]  # API group for deployments
+    resources: [ "deployments" ]
+    verbs: [ "get", "list", "watch" ]
