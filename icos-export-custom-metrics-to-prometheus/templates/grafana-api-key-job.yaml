@@ -64,22 +64,30 @@ spec:
 
               echo "ℹ️ No existing API key found. Creating a new one..."
 
-              # Use `kubectl proxy` to interact with Grafana API securely
-              kubectl proxy --port=8080 &
-              sleep 5  # Give time for proxy to start
+              # Retry API Key Creation for 5 minutes
+              TIMEOUT=600  # 10 minutes
+              ELAPSED=0
+              
+              while true; do
+                API_KEY=$(kubectl exec -n {{ .Release.Namespace }} deployment/test2-grafana -- curl -s -X POST "$GRAFANA_URL/api/auth/keys" \
+                  -H "Content-Type: application/json" \
+                  -H "Authorization: Basic $(echo -n "$ADMIN_USER:$ADMIN_PASSWORD" | base64)" \
+                  -d '{"name":"grafana-api-export-metrics-key","role":"Admin"}' | jq -r .key)
 
-              # Generate new Grafana API Key
-              API_KEY=$(kubectl exec -n {{ .Release.Namespace }} deployment/test2-grafana -- curl -s -X POST "$GRAFANA_URL/api/auth/keys" \
-                -H "Content-Type: application/json" \
-                -H "Authorization: Basic $(echo -n "$ADMIN_USER:$ADMIN_PASSWORD" | base64)" \
-                -d '{"name":"grafana-api-export-metrics-key","role":"Admin"}' | jq -r .key)
+                if [ -n "$API_KEY" ] && [ "$API_KEY" != "null" ]; then
+                  echo "✅ API Key generated successfully: $API_KEY"
+                  break
+                else
+                  echo "❌ Failed to create API Key. Retrying in 10 seconds..."
+                  sleep 10
+                  ELAPSED=$((ELAPSED + 10))
 
-              if [ -z "$API_KEY" ] || [ "$API_KEY" = "null" ]; then
-                echo "❌ Failed to create API Key!"
-                exit 1
-              else
-                echo "✅ API Key generated successfully."
-              fi
+                  if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+                    echo "❌ Timeout reached. Could not create API Key after 5 minutes. Exiting."
+                    exit 1
+                  fi
+                fi
+              don
 
               # Store the API Key in a Kubernetes Secret
               echo "🗝️ Storing API Key in Kubernetes Secret..."
