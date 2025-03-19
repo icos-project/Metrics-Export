@@ -22,13 +22,19 @@ spec:
               kubectl version --client
 
               echo "📌 Waiting for Grafana secret..."
-              echo "! kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }}"
+              echo "kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }}"
               
-              while ! kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }} &>/dev/null; do
-                echo "Grafana secret not found. Retrying in 10 seconds..."
-                sleep 10
+              while true; do
+                SECRET_RESULT=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }} 2>&1)  # Capture output & errors
+                if echo "$SECRET_RESULT" | grep -q "{{ tpl .Values.grafana.secretName . }}"; then
+                  echo "✅ Grafana secret found!"
+                  break
+                else
+                  echo "🔄 Secret not found. Retrying in 10 seconds..."
+                  echo "🔎 Output: $SECRET_RESULT"
+                  sleep 10
+                fi
               done
-              echo "✅ Grafana secret found!"
 
               echo "🔑 Retrieving Grafana Admin Password..."
               ADMIN_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }} -o jsonpath="{.data.password}" | base64 -d)
