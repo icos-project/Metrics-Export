@@ -31,6 +31,7 @@ spec:
               cp /usr/local/bin/kubectl /shared-bin/kubectl
               
               echo "Waiting for Grafana to be ready..."
+              echo "! /shared-bin/kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }}"
               while ! /shared-bin/kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }} &>/dev/null; do
                 echo "Grafana secret not found. Retrying in 10 seconds..."
                 sleep 10
