@@ -17,4 +17,7 @@ rules:
     verbs: [ "get", "list", "watch" ]
   - apiGroups: [ "" ]  # Core API Group for Pods
     resources: [ "pods" ]
-    verbs: [ "get", "list", "watch", "exec" ]
+    verbs: [ "get", "list", "watch"]
+  - apiGroups: [ "" ]  # 🚀 Grant permission to use exec
+    resources: [ "pods/exec" ]
+    verbs: [ "create" ]
