@@ -17,4 +17,4 @@ rules:
     verbs: [ "get", "list", "watch" ]
   - apiGroups: [ "" ]  # Core API Group for Pods
     resources: [ "pods" ]
-    verbs: [ "get", "list", "watch" ]
+    verbs: [ "get", "list", "watch", "exec" ]
