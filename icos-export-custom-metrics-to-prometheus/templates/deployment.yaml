@@ -2,9 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "ICOS-metrics-export.fullname" . }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "2"
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -29,8 +26,8 @@ spec:
           name: tmp
       {{- end }}
 
-      {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
       initContainers:
+      {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
         - args:
             - update-ca-certificates && cp -r /etc/ssl/certs/ca-certificates.crt /output/
           command:
@@ -46,6 +43,32 @@ spec:
               name: tmp
               readOnly: false
       {{- end }}
+        - name: wait-for-grafana-api-key-job
+          image: bitnami/kubectl:latest
+          command: [ "sh", "-c" ]
+          args:
+            - |
+              echo "⏳ Waiting for Grafana API Key Job to complete..."
+              TIMEOUT=1200  # 20 minutes
+              ELAPSED=0
+              
+              while true; do
+                JOB_STATUS=$(kubectl get jobs -n {{ .Release.Namespace }} grafana-api-key-job -o jsonpath="{.status.succeeded}" 2>/dev/null)
+              
+                if [ "$JOB_STATUS" = "1" ]; then
+                  echo "✅ Grafana API Key Job has completed successfully!"
+                  exit 0
+                fi
+              
+                echo "🔄 Job not completed yet. Retrying in 10 seconds..."
+                sleep 10
+                ELAPSED=$((ELAPSED + 10))
+              
+                if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+                  echo "❌ Timeout: Grafana API Key Job did not complete after 10 minutes. Exiting."
+                  exit 1
+                fi
+              done
 
       containers:
         - name: {{ include "ICOS-metrics-export.fullname" . }}
