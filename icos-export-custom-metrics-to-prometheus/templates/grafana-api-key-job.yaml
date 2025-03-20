@@ -101,7 +101,7 @@ spec:
               ELAPSED=0
               
               while true; do
-                API_KEY=$(kubectl exec -n {{ .Release.Namespace }} deployment/test2-grafana -- curl -s -X POST "$GRAFANA_URL/api/auth/keys" \
+                API_KEY=$(kubectl exec -n {{ .Release.Namespace }} deployment/{{ .Release.Name }}-grafana -- curl -s -X POST "$GRAFANA_URL/api/auth/keys" \
                   -H "Content-Type: application/json" \
                   -H "Authorization: Basic $(echo -n "$ADMIN_USER:$ADMIN_PASSWORD" | base64)" \
                   -d '{"name":"grafana-api-export-metrics-key","role":"Admin"}' | jq -r .key)
