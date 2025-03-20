@@ -4,7 +4,6 @@ metadata:
   name: {{ include "ICOS-metrics-export.fullname" . }}
 spec:
   replicas: {{ .Values.replicaCount }}
-  serviceAccountName: test2-icos-metrics-export-sa  # ✅ Ensure it uses the right ServiceAccount
   selector:
     matchLabels:
       app: {{ include "ICOS-metrics-export.fullname" . }}
@@ -27,6 +26,7 @@ spec:
           name: tmp
       {{- end }}
 
+      serviceAccountName: test2-icos-metrics-export-sa  # ✅ Ensure it uses the right ServiceAccount
       initContainers:
       {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
         - args:
