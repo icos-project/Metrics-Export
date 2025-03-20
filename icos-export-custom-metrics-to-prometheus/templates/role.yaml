@@ -21,3 +21,6 @@ rules:
   - apiGroups: [ "" ]  # 🚀 Grant permission to use exec
     resources: [ "pods/exec" ]
     verbs: [ "create" ]
+  - apiGroups: [ "batch" ]  # Allow access to jobs
+    resources: [ "jobs" ]
+    verbs: [ "get", "list" ]
