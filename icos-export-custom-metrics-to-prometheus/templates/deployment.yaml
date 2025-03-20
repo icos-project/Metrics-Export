@@ -29,8 +29,8 @@ spec:
           name: tmp
       {{- end }}
 
-      initContainers:
       {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
+      initContainers:
         - args:
             - update-ca-certificates && cp -r /etc/ssl/certs/ca-certificates.crt /output/
           command:
@@ -46,32 +46,7 @@ spec:
               name: tmp
               readOnly: false
       {{- end }}
-        - name: wait-for-grafana-secret
-          image: busybox
-          command: [ "sh", "-c" ]
-          args:
-            - |
-              TIMEOUT=900  # Set a timeout (900 seconds = 15 minutes)
-              ELAPSED=0
-              echo "Waiting for Grafana API key secret..."
-              ReleaseNamespace="{{ .Release.Namespace }}"
-              echo "Release Namespace: ${ReleaseNamespace}"
-              
-              # Use the Kubernetes API to check if the secret exists
-              while ! wget -q --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
-                        --header="Accept: application/json" \
-                        --no-check-certificate \
-                        https://kubernetes.default.svc/api/v1/namespaces/{{ .Release.Namespace }}/secrets/grafana-api-export-metrics-key -O /dev/null; do
-              
-                echo "Secret not found. Retrying in 5s..."
-                sleep 5
-                ELAPSED=$((ELAPSED+5))
-                if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
-                  echo "❌ Timeout reached while waiting for the secret. Exiting."
-                  exit 1
-                fi
-              done
-              echo "✅ Secret found. Proceeding..."
+
       containers:
         - name: {{ include "ICOS-metrics-export.fullname" . }}
           image: "{{ .Values.image.repository  }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
