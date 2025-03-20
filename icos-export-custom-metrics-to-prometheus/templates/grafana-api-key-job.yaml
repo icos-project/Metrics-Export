@@ -35,6 +35,40 @@ spec:
                   sleep 10
                 fi
               done
+              
+              echo "📌 Waiting for Grafana to be fully ready..."
+              
+              TIMEOUT=600  # 10 minutes
+              ELAPSED=0
+              
+              while true; do
+                GRAFANA_STATUS=$(kubectl get pods -l app.kubernetes.io/name=grafana -n {{ .Release.Namespace }} -o jsonpath="{.items[*].status.phase}" 2>/dev/null)
+              
+                if echo "$GRAFANA_STATUS" | grep -q "Running"; then
+                  echo "✅ Grafana is running!"
+                  break
+                else
+                  echo "🔄 Grafana is not yet ready. Retrying in 10 seconds..."
+                  sleep 10
+                  ELAPSED=$((ELAPSED + 10))
+              
+                  if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+                    echo "❌ Timeout reached. Grafana did not become ready after 10 minutes. Exiting."
+                    exit 1
+                  fi
+                fi
+              done
+              
+              # Fetch existing API keys
+              echo "🔎 Checking for existing Grafana API Key..."
+              EXISTING_KEYS=$(kubectl get secret --namespace {{ .Release.Namespace }} grafana-api-export-metrics-key -o jsonpath="{.data.api_key}" | base64 -d 2>/dev/null || echo "")
+
+              if [ -n "$EXISTING_KEYS" ]; then
+                echo "✅ Found existing API Key. No need to create a new one."
+                exit 0
+              fi
+
+              echo "ℹ️ No existing API key found. Creating a new one..."
 
               echo "🔑 Retrieving Grafana Admin Password..."
               ADMIN_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ tpl .Values.grafana.secretName . }} -o jsonpath="{.data.password}" | base64 -d)
@@ -52,17 +86,6 @@ spec:
 
               echo "🌐 GRAFANA_URL: $GRAFANA_URL"
               echo "👤 ADMIN_USER: $ADMIN_USER"
-
-              # Fetch existing API keys
-              echo "🔎 Checking for existing Grafana API Key..."
-              EXISTING_KEYS=$(kubectl get secret --namespace {{ .Release.Namespace }} grafana-api-export-metrics-key -o jsonpath="{.data.api_key}" | base64 -d 2>/dev/null || echo "")
-
-              if [ -n "$EXISTING_KEYS" ]; then
-                echo "✅ Found existing API Key. No need to create a new one."
-                exit 0
-              fi
-
-              echo "ℹ️ No existing API key found. Creating a new one..."
 
               # Retry API Key Creation for 5 minutes
               TIMEOUT=600  # 10 minutes
