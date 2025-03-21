@@ -59,11 +59,7 @@ spec:
                       -H "Authorization: Basic $AUTH")
                 
                     # Find ID of API key with matching name
-                    KEY_ID=$(echo "$RAW_KEYS" | \
-                      sed 's/[{}]/\n/g' | \
-                      grep '"name":"grafana-api-export-metrics-key"' -B 1 | \
-                      grep '"id":' | \
-                      sed 's/[^0-9]*//g')
+                    KEY_ID=$(echo "$RAW_KEYS" | grep -o '{[^}]*"name":"grafana-api-export-metrics-key"[^}]*}' | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
                     
                     if [ -n "$KEY_ID" ]; then
                       echo "🧹 Deleting existing Grafana API Key with ID: $KEY_ID"
