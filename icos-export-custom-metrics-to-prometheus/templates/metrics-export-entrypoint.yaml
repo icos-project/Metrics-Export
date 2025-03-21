@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metrics-export-entrypoint
+  namespace: {{ .Release.Namespace }}
+data:
+  entrypoint.sh: |
+    #!/bin/sh
+    echo "📌 Checking Grafana API Key Job status..."
+
+    TIMEOUT=600
+    ELAPSED=0
+
+    while true; do
+      JOB_STATUS=$(kubectl get job grafana-api-key-job -n {{ .Release.Namespace }} -o jsonpath="{.status.succeeded}" 2>/dev/null)
+
+      if [ "$JOB_STATUS" = "1" ]; then
+        echo "✅ Grafana API Key Job completed!"
+        break
+      fi
+
+      echo "⏳ Waiting for Grafana API Key Job... ($ELAPSED/$TIMEOUT)"
+      sleep 10
+      ELAPSED=$((ELAPSED + 10))
+
+      if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+        echo "❌ Timeout reached while waiting for the API Key Job."
+        exit 1
+      fi
+    done
+
+    echo "🚀 Starting main application..."
+    exec "$@"
