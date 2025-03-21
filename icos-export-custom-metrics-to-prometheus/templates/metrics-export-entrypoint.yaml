@@ -31,3 +31,4 @@ data:
 
     echo "🚀 Starting main application..."
     exec "$@"
+
