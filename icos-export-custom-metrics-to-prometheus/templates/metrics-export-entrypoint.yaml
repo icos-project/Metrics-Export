@@ -22,9 +22,8 @@ data:
       RESPONSE=$(curl -sS --cacert "$CACERT" -H "Authorization: Bearer $TOKEN" \
         "$API_SERVER/apis/batch/v1/namespaces/$NAMESPACE/jobs/grafana-api-key-job")
 
-      SUCCEEDED=$(echo "$RESPONSE" | jq -r '.status.succeeded // 0')
-
-      if [ "$SUCCEEDED" = "1" ]; then
+      # Look for indication of successful job
+      if echo "$RESPONSE" | grep -q '"type": *"Complete"' && echo "$RESPONSE" | grep -q '"status": *"True"'; then
         echo "✅ Grafana API Key Job has completed successfully!"
         break
       fi
