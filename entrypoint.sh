@@ -35,11 +35,6 @@ while true; do
   sleep 10
   ELAPSED=$((ELAPSED + 10))
 
-
-
-
-
-
   if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
     echo "❌ Timeout: Grafana API Key Job did not complete after 10 minutes. Exiting."
     exit 1
