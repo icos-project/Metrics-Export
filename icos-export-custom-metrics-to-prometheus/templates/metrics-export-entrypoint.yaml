@@ -41,7 +41,6 @@ data:
     done
 
     echo "🚀 Starting main application..."
-    exec "$@"
 
     PORT=${PORT:-8000}
     echo "🚀 Starting Gunicorn..."
