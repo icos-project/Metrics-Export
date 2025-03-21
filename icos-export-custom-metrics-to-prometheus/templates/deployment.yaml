@@ -92,6 +92,7 @@ spec:
                 secretKeyRef:
                   name: grafana-api-export-metrics-key
                   key: api_key
+                  optional: true
             - name: HELM_RELEASE_NAMESPACE
               valueFrom:
                 fieldRef:
