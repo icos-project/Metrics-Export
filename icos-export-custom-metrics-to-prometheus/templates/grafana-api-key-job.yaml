@@ -54,7 +54,8 @@ spec:
                     echo "🔍 Secret does not exist. Checking for existing Grafana API key with the same name..."
                 
                     # Get all API keys from Grafana
-                    RAW_KEYS=$(curl -s -X GET "$GRAFANA_URL/api/auth/keys" \
+                    RAW_KEYS=$(kubectl exec -n {{ .Release.Namespace }} "$GRAFANA_POD" -- \
+                      curl -s -X GET "$GRAFANA_URL/api/auth/keys" \
                       -H "Authorization: Basic $AUTH")
                 
                     # Find ID of API key with matching name
@@ -66,22 +67,23 @@ spec:
                     
                     if [ -n "$KEY_ID" ]; then
                       echo "🧹 Deleting existing Grafana API Key with ID: $KEY_ID"
-                      curl -s -X DELETE "$GRAFANA_URL/api/auth/keys/$KEY_ID" \
+                      kubectl exec -n {{ .Release.Namespace }} "$GRAFANA_POD" -- \
+                        curl -s -X DELETE "$GRAFANA_URL/api/auth/keys/$KEY_ID" \
                         -H "Authorization: Basic $AUTH"
                     fi
                 
                     echo "🔑 Creating new API Key..."
-                    API_KEY=$(curl -s -X POST "$GRAFANA_URL/api/auth/keys" \
+                    API_KEY=$(kubectl exec -n {{ .Release.Namespace }} "$GRAFANA_POD" -- \
+                      curl -s -X POST "$GRAFANA_URL/api/auth/keys" \
                       -H "Content-Type: application/json" \
-                      -H "Authorization: Basic $AUTH" \
-                      -d '{"name":"grafana-api-export-metrics-key","role":"Admin"}' | \
-                      sed 's/.*"key":"\([^"]*\)".*/\1/')
+                      -H "Authorization: Basic $(echo -n "$ADMIN_USER:$ADMIN_PASSWORD" | base64)" \
+                      -d '{"name":"grafana-api-export-metrics-key","role":"Admin"}' | grep -o '"key":"[^"]*"' | sed 's/"key":"\(.*\)"/\1/')
                 
                     if [ -n "$API_KEY" ]; then
                       echo "🗝️ Storing API Key in Secret..."
                       kubectl create secret generic grafana-api-export-metrics-key \
                         --from-literal=api_key="$API_KEY" \
-                        -n "$NAMESPACE" \
+                        -n {{ .Release.Namespace }} \
                         --dry-run=client -o yaml | kubectl apply -f -
                       echo "✅ Secret created successfully."
                     else
