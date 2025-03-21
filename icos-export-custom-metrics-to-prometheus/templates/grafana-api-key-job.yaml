@@ -46,8 +46,8 @@ spec:
                   "$GRAFANA_URL/api/auth/keys")
                 
                 if echo "$EXISTING_KEY" | grep -q "grafana-api-export-metrics-key"; then
-                  echo "✅ Existing API Key found. Reusing..."
-                  API_KEY=$(echo "$EXISTING_KEY" | grep -o '"key":"[^"]*"' | head -1 | sed 's/"key":"\(.*\)"/\1/')
+                  echo "✅ Existing API Key found. Skipping creation."
+                  exit 0
                 else
                   echo "🔑 Creating new API Key..."
                   API_KEY=$(kubectl exec -n {{ .Release.Namespace }} "$GRAFANA_POD" -- \
@@ -55,16 +55,16 @@ spec:
                     -H "Content-Type: application/json" \
                     -H "Authorization: Basic $(echo -n "$ADMIN_USER:$ADMIN_PASSWORD" | base64)" \
                     -d '{"name":"grafana-api-export-metrics-key","role":"Admin"}' | grep -o '"key":"[^"]*"' | sed 's/"key":"\(.*\)"/\1/')
-                fi
-                
-                if [ -n "$API_KEY" ]; then
-                  echo "🗝️ Storing API Key in Secret..."
-                  kubectl create secret generic grafana-api-export-metrics-key \
-                    --from-literal=api_key="$API_KEY" \
-                    -n {{ .Release.Namespace }} \
-                    --dry-run=client -o yaml | kubectl apply -f -
-                  echo "✅ Secret created or updated successfully."
-                else
-                  echo "❌ Failed to retrieve or create an API Key."
-                  exit 1
+              
+                  if [ -n "$API_KEY" ]; then
+                    echo "🗝️ Storing API Key in Secret..."
+                    kubectl create secret generic grafana-api-export-metrics-key \
+                      --from-literal=api_key="$API_KEY" \
+                      -n {{ .Release.Namespace }} \
+                      --dry-run=client -o yaml | kubectl apply -f -
+                    echo "✅ Secret created successfully."
+                  else
+                    echo "❌ Failed to create a new API Key."
+                    exit 1
+                  fi
                 fi
