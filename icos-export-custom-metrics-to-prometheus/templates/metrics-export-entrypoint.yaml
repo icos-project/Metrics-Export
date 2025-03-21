@@ -11,37 +11,33 @@ data:
     TIMEOUT=600  # 10 minutes
     ELAPSED=0
     
+    API_SERVER="https://kubernetes.default.svc"
+    NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+    echo "NAMESPACE ${NAMESPACE}"
+    TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    echo "TOKEN ${TOKEN}"
+    CACERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    echo "CACERT ${CACERT}"
+  
     while true; do
-      echo "HELM_RELEASE_NAMESPACE: ${HELM_RELEASE_NAMESPACE}"
+      echo "🔍 Checking Job status in namespace: $NAMESPACE"
 
-      COMPLETION_STATUS=$(kubectl get jobs -n ${HELM_RELEASE_NAMESPACE} grafana-api-key-job -o jsonpath="{.status.conditions[?(@.type=='Complete')].status}" 2>/dev/null)
-      echo "🔍 COMPLETION_STATUS: ${COMPLETION_STATUS}"
-      
-      RAW_JOB_OUTPUT=$(kubectl get jobs -n ${HELM_RELEASE_NAMESPACE} grafana-api-key-job -o jsonpath="{.status.succeeded}" 2>&1)
-      echo "🔍 RAW JOB OUTPUT: '$RAW_JOB_OUTPUT'"
-      JOB_STATUS=$(echo "$RAW_JOB_OUTPUT" | tr -d '\n' | tr -d '\r')  # Remove any weird newlines
-      
-      export HELM_RELEASE_NAMESPACE1=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
-      echo "HELM_RELEASE_NAMESPACE1: ${HELM_RELEASE_NAMESPACE1}"
-      echo "Test2"
-      COMPLETION_STATUS=$(kubectl get jobs -n ${HELM_RELEASE_NAMESPACE} grafana-api-key-job -o jsonpath="{.status.conditions[?(@.type=='Complete')].status}" 2>/dev/null)
-      echo "🔍 COMPLETION_STATUS: ${COMPLETION_STATUS}"
-      
-      RAW_JOB_OUTPUT=$(kubectl get jobs -n ${HELM_RELEASE_NAMESPACE} grafana-api-key-job -o jsonpath="{.status.succeeded}" 2>&1)
-      echo "🔍 RAW JOB OUTPUT: '$RAW_JOB_OUTPUT'"
-      JOB_STATUS=$(echo "$RAW_JOB_OUTPUT" | tr -d '\n' | tr -d '\r')  # Remove any weird newlines
-      
-      JOB_STATUS=$(kubectl get jobs -n ${HELM_RELEASE_NAMESPACE:-default} grafana-api-key-job -o jsonpath="{.status.succeeded}" 2>/dev/null)
-      
-      if [ "$JOB_STATUS" = "1" ]; then
+      RESPONSE=$(curl -sS --cacert "$CACERT" -H "Authorization: Bearer $TOKEN" \
+      "$API_SERVER/apis/batch/v1/namespaces/$NAMESPACE/jobs/grafana-api-key-job")
+      echo "RESPONSE ${RESPONSE}"
+
+      COMPLETED=$(echo "$RESPONSE" | grep -Po '"type": ?"Complete", ?"status": ?"True"')
+      echo "COMPLETED ${COMPLETED}"
+
+      if [ -n "$COMPLETED" ]; then
         echo "✅ Grafana API Key Job has completed successfully!"
         break
       fi
-      
-      echo "🔄 Job not completed yet. Retrying in 10 seconds..."
+
+      echo "🔄 Job not completed yet. Retrying in 10 seconds... ($ELAPSED/$TIMEOUT)"
       sleep 10
       ELAPSED=$((ELAPSED + 10))
-      
+
       if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
         echo "❌ Timeout: Grafana API Key Job did not complete after 10 minutes. Exiting."
         exit 1
