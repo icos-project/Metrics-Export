@@ -10,26 +10,21 @@ data:
     echo "⏳ Waiting for Grafana API Key Job to complete..."
     TIMEOUT=600  # 10 minutes
     ELAPSED=0
-    
+
     API_SERVER="https://kubernetes.default.svc"
     NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
-    echo "NAMESPACE ${NAMESPACE}"
     TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-    echo "TOKEN ${TOKEN}"
     CACERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-    echo "CACERT ${CACERT}"
-  
+
     while true; do
       echo "🔍 Checking Job status in namespace: $NAMESPACE"
 
       RESPONSE=$(curl -sS --cacert "$CACERT" -H "Authorization: Bearer $TOKEN" \
-      "$API_SERVER/apis/batch/v1/namespaces/$NAMESPACE/jobs/grafana-api-key-job")
-      echo "RESPONSE ${RESPONSE}"
+        "$API_SERVER/apis/batch/v1/namespaces/$NAMESPACE/jobs/grafana-api-key-job")
 
-      COMPLETED=$(echo "$RESPONSE" | grep -Po '"type": ?"Complete", ?"status": ?"True"')
-      echo "COMPLETED ${COMPLETED}"
+      SUCCEEDED=$(echo "$RESPONSE" | jq -r '.status.succeeded // 0')
 
-      if [ -n "$COMPLETED" ]; then
+      if [ "$SUCCEEDED" = "1" ]; then
         echo "✅ Grafana API Key Job has completed successfully!"
         break
       fi
@@ -43,4 +38,6 @@ data:
         exit 1
       fi
     done
-      
+
+    echo "🚀 Starting main application..."
+    exec "$@"
