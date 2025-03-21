@@ -973,3 +973,4 @@ async def show_models(request: ShowModelsRequest):
         http_err = 'An error occurred in show_models: {}'.format(e)
         logger.error(http_err)
         raise HTTPException(status_code=400, detail='{}'.format(e))
+
