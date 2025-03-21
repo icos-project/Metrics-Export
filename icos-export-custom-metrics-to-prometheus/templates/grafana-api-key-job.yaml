@@ -7,7 +7,7 @@ metadata:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "1"
 spec:
-  ttlSecondsAfterFinished: 600000
+  ttlSecondsAfterFinished: null
   template:
     spec:
       serviceAccountName: {{ include "ICOS-metrics-export.fullname" . }}-sa
