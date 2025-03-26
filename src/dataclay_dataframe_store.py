@@ -36,13 +36,16 @@ def create_dataframe(grafana_results):
     # Convert combined_data to a list of dictionaries and then a pandas DataFrame
     combined_data_list = list(combined_data.values())
     df = pd.DataFrame(combined_data_list)
-    print('df1: ', df)
+
+    # Rename columns except the first one to input_1, input_2, ...
+    original_columns = df.columns.tolist()
+    renamed_columns = [original_columns[0]] + [f"input_{i}" for i in range(1, len(original_columns))]
+    df.columns = renamed_columns
     return df
 
 
 async def create_and_save_dataframe_to_dataclay(grafana_results, model_name: str):
     df = create_dataframe(grafana_results)
-    print('df: ', df)
 
     await dataclay_dataframe_store(dataset_name=model_name, dataset_dataframe=df)
     return

@@ -9,6 +9,7 @@ from prometheus_client.multiprocess import MultiProcessCollector
 from prometheus_client.registry import Collector
 
 from src.aggregator_retrieve_nodes import aggregator_request
+# from src.create_and_save_csv_files_from_grafana import create_and_save_csv_files_from_grafana
 from src.dataclay_dataframe_store import create_and_save_dataframe_to_dataclay
 from src.grafana_request import grafana_request
 from src.keycloak_middleware import validate_keycloak
@@ -718,6 +719,7 @@ async def train_model_metric_endpoint(request: TrainModelMetricItemRequest):
     - model_type (mandatory) -> string : The type of the model to be trained. Possible values: "XGB", "Arima".
     - test_size (mandatory) -> float : A float number between 0 and 1 that will indicate the percentage of test data
     that will be used at training.
+    - dataclay -> bool : To use dataclay or not.
     - dataset_name (optional) -> str : The name of the dataframe at Dataclay. If left empty new dataframe will be
     created for the result of Grafana queries.
     - steps_back (mandatory) -> int : The amount of samples that will be used.
@@ -749,7 +751,7 @@ async def train_model_metric_endpoint(request: TrainModelMetricItemRequest):
         if request.step_in_seconds and request.step_in_seconds < INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT:
             request.step_in_seconds = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
         # If dataset names are passed then skip grafana and dataclay steps.
-        if request.dataset_name:
+        if not request.dataclay:
             dataset_name = request.dataset_name
         else:
             # step 1 --> using the service account at Grafana create the queries based on the telemetry metrics asked
@@ -778,7 +780,7 @@ async def continue_training_and_create_metric(request, dataset_name):
             datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], request.model_name))
 
         # step 3 --> call CeADAR API and get the response with the model name and type
-        model_result_status_code, model_tag, metric_type, metric_states = await call_intelligence_api_train_model(
+        model_result_status_code, model_tag = call_intelligence_api_train_model(
             request=request, input_data=dataset_name)
         # If model_result_status_code is not 200, exception must be thrown for error with intelligence API
         if model_result_status_code != 200:
@@ -786,10 +788,9 @@ async def continue_training_and_create_metric(request, dataset_name):
             logger.error(http_err)
             raise Exception(http_err)
 
-        logger.info('Time: {}, Intelligence API model training of {} completed. Model tag: {}, create metric type: {}, '
-                    'with metric states (if exist): {}'.format(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
-                                                               request.model_name, model_tag, metric_type,
-                                                               metric_states))
+        logger.info('Time: {}, Intelligence API model training of {} completed. Model tag: {}, create metric type: {}'
+                    .format(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], request.model_name, model_tag,
+                            MetricType.Gauge.value))
 
         # step 4 --> call create_model_metric
         logger.info('Time: {}, Model inference of {} started.'.format(
@@ -800,15 +801,15 @@ async def continue_training_and_create_metric(request, dataset_name):
             'steps_back',
             'telemetry_metrics'
         })
-        data['metric_name'] = dataset_name
-        data['metric_type'] = metric_type
+        data['metric_name'] = request.model_name
+        data['metric_type'] = MetricType.Gauge.value
         if request.step_in_seconds and request.step_in_seconds >= INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT:
             data['step_in_seconds'] = request.step_in_seconds
         else:
             data['step_in_seconds'] = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
         data['model_tag'] = model_tag
         data['model_type'] = request.model_type
-        data['model_states'] = metric_states
+        # data['model_states'] = metric_states
 
         await create_dynamic_model_metric_endpoint(CreateModelMetricItemRequest(**data))
 
@@ -954,7 +955,9 @@ async def startup_event():
     task = asyncio.create_task(periodic_aggregator_check(stop_event))
     threads['static_metrics'] = task
 
-
+# ======================================================================================================================
+# ============================================= Show Models functionality ==============================================
+# ======================================================================================================================
 @app.post('/show_models')
 async def show_models(request: ShowModelsRequest):
     """

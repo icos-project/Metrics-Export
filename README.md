@@ -177,15 +177,16 @@ metrics in a format that Prometheus can understand and collect.
       - "Arima".
    4) `test_size` (mandatory) -> **float**: A float number between 0 and 1 that will indicate the percentage of test data
       that will be used at training.
-   5) `dataset_name` (optional) -> **str**: The name of the dataframe at Dataclay. If left empty new dataframe will be
+   5) `dataclay` -> **bool** : To use dataclay or not.
+   6) `dataset_name` (optional) -> **str**: The name of the dataframe at Dataclay. If left empty new dataframe will be
       created from the result of Grafana queries.
-   6) `steps_back` (mandatory) -> **int**: The amount of samples that will be used.
-   7) `step_in_seconds` (optional) -> **int**: The time distance between each sample at telemetry metric. Default is the 
+   7) `steps_back` (mandatory) -> **int**: The amount of samples that will be used.
+   8) `step_in_seconds` (optional) -> **int**: The time distance between each sample at telemetry metric. Default is the 
       update rate of Prometheus.
-   8) `max_models_count` (optional) -> **int**: TBD
-   9) `max_mlruns_count` (optional) -> **int**: TBD 
-   10) `shap_samples` (optional) -> **int**: TBD 
-   11) `model_parameters` (mandatory) -> **Dictionary**: The parameters needed based on the model type that will be 
+   9) `max_models_count` (optional) -> **int**: TBD
+   10) `max_mlruns_count` (optional) -> **int**: TBD 
+   11) `shap_samples` (optional) -> **int**: TBD 
+   12) `model_parameters` (mandatory) -> **Dictionary**: The parameters needed based on the model type that will be 
        trained.  
       It must be a dictionary based on the model types:
         - **ArimaModelParameters**:
@@ -199,7 +200,7 @@ metrics in a format that Prometheus can understand and collect.
             - **subsample (optional)** -> **float**: TBD
             - **colsample_bytree (optional)** -> **float**: TBD
             - **alpha (optional)** -> **int**: TBD
-   12) `telemetry_metrics` (mandatory) -> **list[str]**: A list of queries for telemetry metrics from witch data will be
+   13) `telemetry_metrics` (mandatory) -> **list[str]**: A list of queries for telemetry metrics from witch data will be
       retrieved.
 
 7) `show_models` This route will receive a json payload to show models that Intelligence API has stored to the model 

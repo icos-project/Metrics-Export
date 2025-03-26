@@ -79,6 +79,10 @@ class ArimaModelParameters(BaseModel):
     q: Optional[int] = None
 
 
+class ArimaModel(BaseModel):
+    xgboost_model_parameters: ArimaModelParameters
+
+
 # create the types for XGB model parameters
 class XGBModelParameters(BaseModel):
     n_estimators: Optional[int] = None
@@ -89,18 +93,23 @@ class XGBModelParameters(BaseModel):
     alpha: Optional[int] = None
 
 
+class XGBModel(BaseModel):
+    xgboost_model_parameters: XGBModelParameters
+
+
 class TrainModelMetricItemRequest(BaseModel):
     labels: Optional[Dict[str, str | int | float]] = {}
     model_name: str
     model_type: ModelType
     test_size: float
+    dataclay: bool = False
     dataset_name: str | None = None
     steps_back: int
     step_in_seconds: Optional[int] = INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT
     max_models_count: Optional[int] = None
     max_mlruns_count: Optional[int] = None
     shap_samples: Optional[int] = None
-    model_parameters: ArimaModelParameters | XGBModelParameters
+    model_parameters: ArimaModel | XGBModel
     telemetry_metrics: list[str]
 
 
