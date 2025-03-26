@@ -23,6 +23,11 @@ def create_and_save_csv_files_from_grafana(grafana_results, model_name: str):
     combined_data_list = list(combined_data.values())
     df = pd.DataFrame(combined_data_list)
 
+    # Rename columns except the first one to input_1, input_2, ...
+    original_columns = df.columns.tolist()
+    renamed_columns = [original_columns[0]] + [f"input_{i}" for i in range(1, len(original_columns))]
+    df.columns = renamed_columns
+
     # Save the DataFrame to a CSV file
     df.to_csv('{}.csv'.format(model_name), index=False)
 

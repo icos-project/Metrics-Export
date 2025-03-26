@@ -92,6 +92,7 @@ def call_intelligence_api_train_model(request: TrainModelMetricItemRequest, inpu
         'accept': 'application/json',
         'Content-Type': 'application/json',
     }
+
     data = json.dumps({
         "model_name": request.model_name,
         "model_type": request.model_type.value,
@@ -101,12 +102,18 @@ def call_intelligence_api_train_model(request: TrainModelMetricItemRequest, inpu
         "max_models_count": request.max_models_count,
         "max_mlruns_count": request.max_mlruns_count,
         "shap_samples": request.shap_samples,
-        "model_parameters": request.model_parameters.dict(),
+        "dataclay": request.dataclay,
+        # "dataclay_host": "127.0.0.1",
+        # "dataclay_hostname": "testuser",
+        # "dataclay_password": "s3cret",
+        "dataclay_dataset": input_data,
+        "model_parameters": request.model_parameters.dict()
     })
+
     try:
         logger.info('Sending request to Intelligence API - Train with data: {}'.format(data))
         response = requests.post(url, headers=headers, data=data)
-        return response.status_code, response.json()
+        return response.status_code, response.json()['Trained Model']
     except Exception as e:
         # If model_result_status_code is not 200, exception must be thrown for error with intelligence API
         # communication
