@@ -45,4 +45,4 @@ data:
 
     PORT=${PORT:-8000}
     echo "🚀 Starting Gunicorn..."
-    exec gunicorn "src.main:app" -b "0.0.0.0:${PORT}" -k uvicorn.workers.UvicornWorker --timeout 300
+    exec gunicorn "src.main:app" -b "0.0.0.0:${PORT}" -k uvicorn.workers.UvicornWorker --timeout 300 --log-level debug
