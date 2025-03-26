@@ -18,7 +18,8 @@ from src.metric_helpers import my_registry, MetricType, MetricItemRequest, Unreg
 from src.metric_types_functions import counter, gauge, info, enum
 from src.intelligence_layer import call_intelligence_api_infer_model, prepare_results_for_model_input, \
     call_intelligence_api_train_model, call_intelligence_api_show_models
-from src.environment_variables import INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT, logger, SECURITY_DISABLED
+from src.environment_variables import INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT, logger, SECURITY_DISABLED, DATACLAY_HOST, \
+    DATACLAY_USERNAME, DATACLAY_PASSWORD
 
 
 # Using multiprocess collector for registry
@@ -754,6 +755,8 @@ async def train_model_metric_endpoint(request: TrainModelMetricItemRequest):
         if not request.dataclay:
             dataset_name = request.dataset_name
         else:
+            if all(var == "" for var in [DATACLAY_HOST, DATACLAY_USERNAME, DATACLAY_PASSWORD]):
+                raise Exception('DATACLAY does not exist')
             # step 1 --> using the service account at Grafana create the queries based on the telemetry metrics asked
             grafana_results = await grafana_request(request.telemetry_metrics)
             # FOR MOCK --> create the csv based on the results and save them locally
@@ -810,6 +813,10 @@ async def continue_training_and_create_metric(request, dataset_name):
         data['model_tag'] = model_tag
         data['model_type'] = request.model_type
         # data['model_states'] = metric_states
+        data['labels']['model_name'] = model_tag
+        data['labels']['model_type'] = request.model_type
+        data['labels']['sequence_size'] = request.steps_back
+        data['labels']['step_in_seconds'] = request.step_in_seconds
 
         await create_dynamic_model_metric_endpoint(CreateModelMetricItemRequest(**data))
 
