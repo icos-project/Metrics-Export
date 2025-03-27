@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ICOS-metrics-export.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "ICOS-metrics-export.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "ICOS-metrics-export.fullname" . }}
+    spec:
+      {{- with .Values.imagePullSecrets | default .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      volumes:
+        - name: entrypoint-volume
+          configMap:
+            name: metrics-export-entrypoint
+      {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
+        - configMap:
+            name: {{ tpl .Values.extraCertsBundle.configmapName . }}
+          name: extra-certs-bundle
+        - emptyDir: {}
+          name: tmp
+      {{- end }}
+
+      serviceAccountName: {{ include "ICOS-metrics-export.fullname" . }}-sa  # ✅ Ensure it uses the right ServiceAccount
+      initContainers:
+      {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
+        - args:
+            - update-ca-certificates && cp -r /etc/ssl/certs/ca-certificates.crt /output/
+          command:
+            - /bin/sh
+            - -c
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          name: init-ca-certs
+          volumeMounts:
+            - mountPath: /usr/local/share/ca-certificates/icos-extra-certs.crt
+              name: extra-certs-bundle
+              subPath: {{ tpl .Values.extraCertsBundle.configmapKey . }}
+            - mountPath: /output
+              name: tmp
+              readOnly: false
+      {{- end }}
+#        - name: wait-for-grafana-api-key-job
+#          image: bitnami/kubectl:latest
+#          command: [ "sh", "-c" ]
+#          args:
+#            - |
+#              echo "⏳ Waiting for Grafana API Key Job to complete..."
+#              TIMEOUT=1200  # 20 minutes
+#              ELAPSED=0
+#
+#              while true; do
+#                JOB_STATUS=$(kubectl get jobs -n {{ .Release.Namespace }} grafana-api-key-job -o jsonpath="{.status.succeeded}" 2>/dev/null)
+#
+#                if [ "$JOB_STATUS" = "1" ]; then
+#                  echo "✅ Grafana API Key Job has completed successfully!"
+#                  exit 0
+#                fi
+#
+#                echo "🔄 Job not completed yet. Retrying in 10 seconds..."
+#                sleep 10
+#                ELAPSED=$((ELAPSED + 10))
+#
+#                if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+#                  echo "❌ Timeout: Grafana API Key Job did not complete after 10 minutes. Exiting."
+#                  exit 1
+#                fi
+#              done
+
+      containers:
+        - name: {{ include "ICOS-metrics-export.fullname" . }}
+          image: "{{ .Values.image.repository  }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command: [ "/bin/sh" ]
+          args: [ "/opt/entrypoint/entrypoint.sh" ]
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-icos-metrics-export-config
+          env:
+            - name: GRAFANA_SERVICE_ACCOUNT_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-api-export-metrics-key
+                  key: api_key
+                  optional: true
+            - name: HELM_RELEASE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          volumeMounts:
+            - name: entrypoint-volume
+              mountPath: /opt/entrypoint
+      {{- if (tpl .Values.extraCertsBundle.configmapName .) }}
+            - mountPath: /etc/ssl/certs/icos-extra-certs.crt
+              name: extra-certs-bundle
+              subPath: {{ tpl .Values.extraCertsBundle.configmapKey . }}
+            - mountPath: /etc/ssl/certs/ca-certificates.crt
+              name: tmp
+              subPath: ca-certificates.crt
+      {{- end }}

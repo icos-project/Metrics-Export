@@ -1,0 +1,18 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "ICOS-metrics-export.fullname" . }}-rolebinding
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ICOS-metrics-export.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-2"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "ICOS-metrics-export.fullname" . }}-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "ICOS-metrics-export.fullname" . }}-sa
+    namespace: {{ .Release.Namespace }}
