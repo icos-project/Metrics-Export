@@ -164,119 +164,118 @@ metrics in a format that Prometheus can understand and collect.
    11. `data_interruption` (optional): TBD
    
    12. `history_data` (optional): TBD
-  
 
    After getting the properties it creates the specific metric asked and registers it to the internal registry. 
    **According to the metric type value**:
 
-- **Counter = 1**
+   - **Counter = 1**
    
-  Counter expects:
+     Counter expects:
    
-  - **metric_name (mandatory)** -> **str**. If there is a suffix of _total on the metric name, it will be 
-      removed. When exposing the time series for counter, a _total suffix will be added. This is for compatibility 
-      between OpenMetrics and the Prometheus text format, as OpenMetrics requires the _total suffix.
+     - **metric_name (mandatory)** -> **str**. If there is a suffix of _total on the metric name, it will be 
+         removed. When exposing the time series for counter, a _total suffix will be added. This is for compatibility 
+         between OpenMetrics and the Prometheus text format, as OpenMetrics requires the _total suffix.
       
-  - **metric_info (optional)** -> **str | None**.
+     - **metric_info (optional)** -> **str | None**.
       
-  - **labels (optional)** -> **Optional[Dict[str, str | int | float]]**.
+     - **labels (optional)** -> **Optional[Dict[str, str | int | float]]**.
       
-  - model_states (ignored).
+     - model_states (ignored).
       
-  - **telemetry_metrics (mandatory)** -> **list[str]**.
+     - **telemetry_metrics (mandatory)** -> **list[str]**.
       
-  - **model_tag (mandatory)** -> **str**.
+     - **model_tag (mandatory)** -> **str**.
       
-  - **step_in_seconds (optional)** -> **int**.
+     - **step_in_seconds (optional)** -> **int**.
       
-  - **steps_back (mandatory)** -> **int**.
+     - **steps_back (mandatory)** -> **int**.
       
-  - **history_sample_size (optional)** -> **int | None**.
+     - **history_sample_size (optional)** -> **int | None**.
       
-  - **data_interruption (optional)** -> **bool = False**.
+     - **data_interruption (optional)** -> **bool = False**.
       
-  - **history_data (optional)** -> **list[list[int]]**.
+     - **history_data (optional)** -> **list[list[int]]**.
       
-- **Gauge = 2**
+   - **Gauge = 2**
    
-  Gauge expects:
+     Gauge expects:
    
-  - **metric_name (mandatory)** -> **str**.
+     - **metric_name (mandatory)** -> **str**.
       
-  - **metric_info (optional)** -> **str | None**.
+     - **metric_info (optional)** -> **str | None**.
       
-  - **labels (optional)** -> **Optional[Dict[str, str | int | float]]**.
+     - **labels (optional)** -> **Optional[Dict[str, str | int | float]]**.
       
-  - model_states (ignored).
+     - model_states (ignored).
       
-  - **telemetry_metrics (mandatory)** -> **list[str]**.
+     - **telemetry_metrics (mandatory)** -> **list[str]**.
       
-  - **model_tag (mandatory)** -> **str**.
+     - **model_tag (mandatory)** -> **str**.
       
-  - **step_in_seconds (optional)** -> **int**.
+     - **step_in_seconds (optional)** -> **int**.
       
-  - **steps_back (mandatory)** -> **int**.
+     - **steps_back (mandatory)** -> **int**.
       
-  - **history_sample_size (optional)** -> **int | None**.
+     - **history_sample_size (optional)** -> **int | None**.
       
-  - **data_interruption (optional)** -> **bool = False**.
+     - **data_interruption (optional)** -> **bool = False**.
       
-  - **history_data (optional)** -> **list[list[int]]**.
+     - **history_data (optional)** -> **list[list[int]]**.
       
-- **Info = 3**
+   - **Info = 3**
    
-  Info expects:
+     Info expects:
    
-  - **metric_name (mandatory)** -> **str**.
+     - **metric_name (mandatory)** -> **str**.
       
-  - **metric_info (optional)** -> **str | None**.
+     - **metric_info (optional)** -> **str | None**.
       
-  - **labels (optional)** -> **Optional[Dict[str, str | int | float]]**.
+     - **labels (optional)** -> **Optional[Dict[str, str | int | float]]**.
       
-  - model_states (ignored).
+     - model_states (ignored).
       
-  - **telemetry_metrics (mandatory)** -> **list[str]**.
+     - **telemetry_metrics (mandatory)** -> **list[str]**.
       
-  - **model_tag (mandatory)** -> **str**.
+     - **model_tag (mandatory)** -> **str**.
       
-  - **step_in_seconds (optional)** -> **int**.
+     - **step_in_seconds (optional)** -> **int**.
       
-  - **steps_back (mandatory)** -> **int**.
+     - **steps_back (mandatory)** -> **int**.
       
-  - **history_sample_size (optional)** -> **int | None**.
+     - **history_sample_size (optional)** -> **int | None**.
       
-  - **data_interruption (optional)** -> **bool = False**.
+     - **data_interruption (optional)** -> **bool = False**.
       
-  - **history_data (optional)** -> **list[list[int]]**.
+     - **history_data (optional)** -> **list[list[int]]**.
       
-- **Enum = 4**
+   - **Enum = 4**
    
-  Enum expects:
+     Enum expects:
    
-  - **metric_name (mandatory)** -> **str**.
+     - **metric_name (mandatory)** -> **str**.
       
-  - **metric_info (optional)** -> **str | None**.
+     - **metric_info (optional)** -> **str | None**.
       
-  - **value (mandatory)** -> **str**. The state that will be set.
+     - **value (mandatory)** -> **str**. The state that will be set.
       
-  - **labels (optional)** -> **Optional[Dict[str, str | int | float]]**.
+     - **labels (optional)** -> **Optional[Dict[str, str | int | float]]**.
       
-  - **model_states (mandatory at creation of metric)** -> **Optional[list[str]]**. The available states that will 
-    be set (passed only the first time).
+     - **model_states (mandatory at creation of metric)** -> **Optional[list[str]]**. The available states that will 
+       be set (passed only the first time).
       
-  - **telemetry_metrics (mandatory)** -> **list[str]**.
+     - **telemetry_metrics (mandatory)** -> **list[str]**.
       
-  - **model_tag (mandatory)** -> **str**.
+     - **model_tag (mandatory)** -> **str**.
       
-  - **step_in_seconds (optional)** -> **int**.
+     - **step_in_seconds (optional)** -> **int**.
       
-  - **steps_back (mandatory)** -> **int**.
+     - **steps_back (mandatory)** -> **int**.
       
-  - **history_sample_size (optional)** -> **int | None**.
+     - **history_sample_size (optional)** -> **int | None**.
       
-  - **data_interruption (optional)** -> **bool = False**.
+     - **data_interruption (optional)** -> **bool = False**.
       
-  - **history_data (optional)** -> **list[list[int]]**.
+     - **history_data (optional)** -> **list[list[int]]**.
 
 5) `stop_model_metrics` This route will receive a json payload to stop the metric creation(s) based on specific 
    telemetry data. The json passed will contain:
