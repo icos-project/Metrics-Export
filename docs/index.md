@@ -16,6 +16,29 @@ or by installing all the requirements:
 pip install -r requirements.txt
 ```
 
+1) a
+
+   1) b
+   
+      1) c
+      
+         1) d
+         
+         2) a
+         
+      2) d
+      
+   2) a
+
+1) a
+   1. b
+      - c
+        - d
+        - a
+      - d
+   2. a
+2) b
+
 ## Quick Start
 To get started with the ICOS Metrics Export to Prometheus, simply run the ```src/main.py``` script. The script provides 
 the below routes:
@@ -26,7 +49,7 @@ metrics in a format that Prometheus can understand and collect.
 2) `/create_metric`: This route is used to create and update metrics, tailored to specific monitoring
    needs (type of metrics). It accepts a json payload that must contain:
 
-   1) `metric_type` (mandatory): An **enum** that corresponds to the metric type:
+   1. `metric_type` (mandatory): An **enum** that corresponds to the metric type:
    
        - Counter = 1
        
@@ -36,16 +59,16 @@ metrics in a format that Prometheus can understand and collect.
        
        - Enum = 4
        
-   2) `metric_name`(mandatory): The name of the metric to be created or retrieved if it was already 
+   2. `metric_name`(mandatory): The name of the metric to be created or retrieved if it was already 
        created.
    
-   3) `metric_info` (optional): The info of the metric to be created.
+   3. `metric_info` (optional): The info of the metric to be created.
    
-   4) `value` (mandatory): The value that will be passed to the metric.
+   4. `value` (mandatory): The value that will be passed to the metric.
    
-   5) `labels` (optional): The dictionary of labels that will be set for the metric.
+   5. `labels` (optional): The dictionary of labels that will be set for the metric.
    
-   6) `states` (optional): The list of states if an **Enum** metric is being set for the first time.
+   6. `states` (optional): The list of states if an **Enum** metric is being set for the first time.
 
       After getting the properties it creates the specific metric asked and registers it to the internal 
       registry. **According to the metric type value**:
