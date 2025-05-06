@@ -8,3 +8,12 @@ include:
 
 variables:
   PH_HELM_CHART_FOLDER: icos-export-custom-metrics-to-prometheus/
+
+documentation_website_trigger:
+  trigger:
+    project: 'icos/documentation'
+    branch: 'develop'
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - docs/**/*
