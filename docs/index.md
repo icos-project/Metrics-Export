@@ -16,29 +16,6 @@ or by installing all the requirements:
 pip install -r requirements.txt
 ```
 
-1) a
-
-   1) b
-   
-      1) c
-      
-         1) d
-         
-         2) a
-         
-      2) d
-      
-   2) a
-
-1) a
-   1. b
-      - c
-        - d
-        - a
-      - d
-   2. a
-2) b
-
 ## Quick Start
 To get started with the ICOS Metrics Export to Prometheus, simply run the ```src/main.py``` script. The script provides 
 the below routes:
@@ -138,7 +115,7 @@ metrics in a format that Prometheus can understand and collect.
 3) `/unregister_metric`: This route can be used to delete/unregister a metric created. It accepts a json 
    payload that must contain:
 
-   1) `metric_type` (mandatory): An **enum** that corresponds to the metric type:
+   1. `metric_type` (mandatory): An **enum** that corresponds to the metric type:
    
       - Counter = 1
       
@@ -148,14 +125,14 @@ metrics in a format that Prometheus can understand and collect.
       
       - Enum = 4
       
-   2) `metric_name` (mandatory) -> **str**: The name of the metric to be deleted/unregistered.
+   2. `metric_name` (mandatory) -> **str**: The name of the metric to be deleted/unregistered.
    
 4) `/create_model_metric`: This route will receive a json payload to create a metric based on specific 
    telemetry data that will be retrieved from the Grafana instance of the cluster and a model that must 
    exist at Intelligence layer and will be inferred for predictions. The metric created will be 
    tailored to specific monitoring needs (type of metrics). It accepts a json payload that must contain:
 
-    1) `metric_type` (mandatory): An **enum** that corresponds to the metric type:
+   1. `metric_type` (mandatory): An **enum** that corresponds to the metric type:
    
         - Counter = 1
        
@@ -165,28 +142,28 @@ metrics in a format that Prometheus can understand and collect.
        
         - Enum = 4
        
-    2) `metric_name`(mandatory): The name of the metric to be created or retrieved.
+   2. `metric_name`(mandatory): The name of the metric to be created or retrieved.
    
-    3) `metric_info` (optional): The info of the metric to be created or retrieved.
+   3. `metric_info` (optional): The info of the metric to be created or retrieved.
    
-    4) `labels` (optional): The dictionary of labels that will be set for the metric.
+   4. `labels` (optional): The dictionary of labels that will be set for the metric.
    
-    5) `model_states` (optional): The list of states if an Enum metric is being set for the first time.
+   5. `model_states` (optional): The list of states if an Enum metric is being set for the first time.
    
-    6) `telemetry_metrics` (mandatory): The queries of the telemetry metrics from witch data will be retrieved.
+   6. `telemetry_metrics` (mandatory): The queries of the telemetry metrics from witch data will be retrieved.
    
-    7) `model_tag` (mandatory): The name/tag of the model where the retrieved telemetry data will be sent.
+   7. `model_tag` (mandatory): The name/tag of the model where the retrieved telemetry data will be sent.
    
-    8) `step_in_seconds` (optional): The time distance between each sample at telemetry metric. Default is the 
+   8. `step_in_seconds` (optional): The time distance between each sample at telemetry metric. Default is the 
        update rate of Prometheus.
    
-    9) `steps_back` (mandatory): The amount of samples that will be used.
+   9. `steps_back` (mandatory): The amount of samples that will be used.
    
-    10) `history_sample_size` (optional): TBD
+   10. `history_sample_size` (optional): TBD
    
-    11) `data_interruption` (optional): TBD
+   11. `data_interruption` (optional): TBD
    
-    12) `history_data` (optional): TBD
+   12. `history_data` (optional): TBD
 
    After getting the properties it creates the specific metric asked and registers it to the internal registry. 
    **According to the metric type value**:
@@ -303,74 +280,74 @@ metrics in a format that Prometheus can understand and collect.
 5) `stop_model_metrics` This route will receive a json payload to stop the metric creation(s) based on specific 
    telemetry data. The json passed will contain:
 
-   1) `metric_names` (mandatory): A list of strings with the names of the metrics to be stopped.
+   1. `metric_names` (mandatory): A list of strings with the names of the metrics to be stopped.
 
 6) `train_model_metric` This route will receive a json payload to start a model training based on specific telemetry 
    data that will be retrieved from the Grafana instance of the cluster. The json passed will contain:
 
-   1) `labels` (optional) -> **Dict[str, str | int | float]**: The dictionary of labels that will be set for the metric.
+   1. `labels` (optional) -> **Dict[str, str | int | float]**: The dictionary of labels that will be set for the metric.
    
-   2) `model_name` (mandatory) -> **str**: The name of the model where the retrieved telemetry data will be sent.
+   2. `model_name` (mandatory) -> **str**: The name of the model where the retrieved telemetry data will be sent.
    
-   3) `model_type` (mandatory) -> **str**: The type of the model to be trained. Possible values:
+   3. `model_type` (mandatory) -> **str**: The type of the model to be trained. Possible values:
    
       - "XGB",
       
       - "Arima".
       
-   4) `test_size` (mandatory) -> **float**: A float number between 0 and 1 that will indicate the percentage of test data
+   4. `test_size` (mandatory) -> **float**: A float number between 0 and 1 that will indicate the percentage of test data
       that will be used at training.
    
-   5) `dataclay` -> **bool** : To use dataclay or not.
+   5. `dataclay` -> **bool** : To use dataclay or not.
    
-   6) `dataset_name` (optional) -> **str**: The name of the dataframe at Dataclay. If left empty new dataframe will be
+   6. `dataset_name` (optional) -> **str**: The name of the dataframe at Dataclay. If left empty new dataframe will be
       created from the result of Grafana queries.
    
-   7) `steps_back` (mandatory) -> **int**: The amount of samples that will be used.
+   7. `steps_back` (mandatory) -> **int**: The amount of samples that will be used.
    
-   8) `step_in_seconds` (optional) -> **int**: The time distance between each sample at telemetry metric. Default is the 
+   8. `step_in_seconds` (optional) -> **int**: The time distance between each sample at telemetry metric. Default is the 
       update rate of Prometheus.
    
-   9) `max_models_count` (optional) -> **int**: TBD
+   9. `max_models_count` (optional) -> **int**: TBD
    
-   10) `max_mlruns_count` (optional) -> **int**: TBD
+   10. `max_mlruns_count` (optional) -> **int**: TBD
    
-   11) `shap_samples` (optional) -> **int**: TBD
+   11. `shap_samples` (optional) -> **int**: TBD
    
-   12) `model_parameters` (mandatory) -> **Dictionary**: The parameters needed based on the model type that will be 
+   12. `model_parameters` (mandatory) -> **Dictionary**: The parameters needed based on the model type that will be 
        trained.
    
       It must be a dictionary based on the model types:
 
-        - **ArimaModelParameters**:
+      - **ArimaModelParameters**:
       
-            - **p (optional)** -> **int**: TBD
+        - **p (optional)** -> **int**: TBD
           
-            - **d (optional)** -> **int**: TBD
+        - **d (optional)** -> **int**: TBD
           
-            - **q (optional)** -> **int**: TBD
+        - **q (optional)** -> **int**: TBD
           
-        - **XGBModelParameters**:
+      - **XGBModelParameters**:
       
-            - **n_estimators (optional)** -> **int**: TBD
+        - **n_estimators (optional)** -> **int**: TBD
           
-            - **max_depth (optional)** -> **int**: TBD
+        - **max_depth (optional)** -> **int**: TBD
           
-            - **eta (optional)** -> **float**: TBD
+        - **eta (optional)** -> **float**: TBD
           
-            - **subsample (optional)** -> **float**: TBD
+        - **subsample (optional)** -> **float**: TBD
           
-            - **colsample_bytree (optional)** -> **float**: TBD
+        - **colsample_bytree (optional)** -> **float**: TBD
           
-            - **alpha (optional)** -> **int**: TBD
+        - **alpha (optional)** -> **int**: TBD
           
-   13) `telemetry_metrics` (mandatory) -> **list[str]**: A list of queries for telemetry metrics from witch data will be
+   13. `telemetry_metrics` (mandatory) -> **list[str]**: A list of queries for telemetry metrics from witch data will be
       retrieved.
    
 7) `show_models` This route will receive a json payload to show models that Intelligence API has stored to the model 
    registry. The json will contain:
 
-   1) `model (optional)` -> **str = 'all'**: A string of the model(s) total to show.
+   1. `model (optional)` -> **str = 'all'**: A string of the model(s) total to show.
    
 ## Usage
 
