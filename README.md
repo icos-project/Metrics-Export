@@ -210,7 +210,11 @@ metrics in a format that Prometheus can understand and collect.
 
 7) `show_models` This route will receive a json payload to show models that Intelligence API has stored to the model 
    registry. The json will contain:
-   1) `model (optional)` -> **str = 'all'**: A string of the model(s) total to show.
+   1) `model` (optional) -> **str = 'all'**: A string of the model(s) total to show.
+
+8) `remove_model` This route will receive a json payload to remove a model that Intelligence API has stored to the model
+   registry. The json will contain:
+    1) `model_tag` (mandatory) -> **str**: A string of the model's tag to remove.
 
 ## Usage
 To start the metrics_generator either:

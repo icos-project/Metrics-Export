@@ -14,10 +14,11 @@ from src.dataclay_dataframe_store import create_and_save_dataframe_to_dataclay
 from src.grafana_request import grafana_request
 from src.keycloak_middleware import validate_keycloak
 from src.metric_helpers import my_registry, MetricType, MetricItemRequest, UnregisterMetricItemRequest, \
-    TrainModelMetricItemRequest, CreateModelMetricItemRequest, StopModelMetricItemRequest, ShowModelsRequest
+    TrainModelMetricItemRequest, CreateModelMetricItemRequest, StopModelMetricItemRequest, ShowModelsRequest, \
+    RemoveModelRequest
 from src.metric_types_functions import counter, gauge, info, enum
 from src.intelligence_layer import call_intelligence_api_infer_model, prepare_results_for_model_input, \
-    call_intelligence_api_train_model, call_intelligence_api_show_models
+    call_intelligence_api_train_model, call_intelligence_api_show_models, call_intelligence_api_remove_model
 from src.environment_variables import INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT, logger, SECURITY_DISABLED, DATACLAY_HOST, \
     DATACLAY_USERNAME, DATACLAY_PASSWORD
 
@@ -962,6 +963,7 @@ async def startup_event():
     task = asyncio.create_task(periodic_aggregator_check(stop_event))
     threads['static_metrics'] = task
 
+
 # ======================================================================================================================
 # ============================================= Show Models functionality ==============================================
 # ======================================================================================================================
@@ -984,3 +986,24 @@ async def show_models(request: ShowModelsRequest):
         logger.error(http_err)
         raise HTTPException(status_code=400, detail='{}'.format(e))
 
+
+# ======================================================================================================================
+# ============================================= Show Models functionality ==============================================
+# ======================================================================================================================
+@app.post('/remove_model')
+async def show_models(request: RemoveModelRequest):
+    """
+    remove_model route will receive a json payload to delete a models that Intelligence API model registry has.
+
+    :param request: The json passed will contain:
+    - model_tag: A string of the model's tag to remove.
+
+    :return: a json response 200 if the request was successful.
+    """
+    try:
+        response_code, response_data = call_intelligence_api_remove_model(request)
+        return response_data
+    except Exception as e:
+        http_err = 'An error occurred in remove_model: {}'.format(e)
+        logger.error(http_err)
+        raise HTTPException(status_code=400, detail='{}'.format(e))

@@ -128,3 +128,6 @@ class TrainModelMetricItemRequest(BaseModel):
 class ShowModelsRequest(BaseModel):
     model: str = 'all'
 
+
+class RemoveModelRequest(BaseModel):
+    model_tag: str = ''
