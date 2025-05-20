@@ -97,6 +97,18 @@ class XGBModel(BaseModel):
     xgboost_model_parameters: XGBModelParameters
 
 
+# create the types for PyTorch model parameters
+class PyTorchModelParameters(BaseModel):
+    hidden_size: Optional[int] = None
+    num_epochs: Optional[int] = None
+    quantize: Optional[bool] = None
+    distill: Optional[bool] = None
+
+
+class PyTorchModel(BaseModel):
+    pytorch_model_parameters: PyTorchModelParameters
+
+
 class TrainModelMetricItemRequest(BaseModel):
     labels: Optional[Dict[str, str | int | float]] = {}
     model_name: str
@@ -109,7 +121,7 @@ class TrainModelMetricItemRequest(BaseModel):
     max_models_count: Optional[int] = None
     max_mlruns_count: Optional[int] = None
     shap_samples: Optional[int] = None
-    model_parameters: ArimaModel | XGBModel
+    model_parameters: ArimaModel | XGBModel | PyTorchModel
     telemetry_metrics: list[str]
 
 

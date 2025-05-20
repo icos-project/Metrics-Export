@@ -340,6 +340,16 @@ metrics in a format that Prometheus can understand and collect.
         - **colsample_bytree (optional)** -> **float**: TBD
           
         - **alpha (optional)** -> **int**: TBD
+      
+      - **PyTorchModelParameters**:
+      
+        - **hidden_size (optional)** -> **int**: TBD
+        
+        - num_epochs (optional)** -> **int**: TBD
+        
+        - quantize (optional)** -> **bool**: TBD
+        
+        - distill (optional)** -> **bool**: TBD 
           
    13. `telemetry_metrics` (mandatory) -> **list[str]**: A list of queries for telemetry metrics from witch data will be
       retrieved.
