@@ -1,8 +1,7 @@
 import requests
 import json
 from fastapi import HTTPException
-from src.environment_variables import INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL, INTELLIGENCE_API_MODEL_TRAINING_URL, \
-    logger, INTELLIGENCE_API_SHOW_MODELS, INTELLIGENCE_API_REMOVE_MODEL
+from src.environment_variables import logger, get_intelligence_api_url
 from src.metric_helpers import CreateModelMetricItemRequest, TrainModelMetricItemRequest, ShowModelsRequest, \
     RemoveModelRequest
 
@@ -44,7 +43,8 @@ def call_intelligence_api_infer_model(request: CreateModelMetricItemRequest, inp
 
     :return: Response status code and response data as a json.
     """
-    url = INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL
+    # url = INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL
+    url = get_intelligence_api_url(url_route='predict', url_base_path=request.intelligenceContainerIP)
     headers = {
         'accept': 'application/json',
         'Content-Type': 'application/json',
@@ -88,7 +88,8 @@ def call_intelligence_api_train_model(request: TrainModelMetricItemRequest, inpu
 
     :return: Response status code and response data as a json.
     """
-    url = INTELLIGENCE_API_MODEL_TRAINING_URL
+    # url = INTELLIGENCE_API_MODEL_TRAINING_URL
+    url = get_intelligence_api_url(url_route='train', url_base_path='')
     headers = {
         'accept': 'application/json',
         'Content-Type': 'application/json',
@@ -132,7 +133,8 @@ def call_intelligence_api_show_models(request: ShowModelsRequest):
 
     :return: Response status code and response data as a json.
     """
-    url = INTELLIGENCE_API_SHOW_MODELS
+    # url = INTELLIGENCE_API_SHOW_MODELS
+    url = get_intelligence_api_url(url_route='show_models', url_base_path='')
     headers = {
         'accept': 'application/json',
         'Content-Type': 'application/json',
@@ -165,7 +167,8 @@ def call_intelligence_api_remove_model(request: RemoveModelRequest):
 
     :return: Response status code and response data as a json.
     """
-    url = INTELLIGENCE_API_REMOVE_MODEL
+    # url = INTELLIGENCE_API_REMOVE_MODEL
+    url = get_intelligence_api_url(url_route='remove_model', url_base_path='')
     headers = {
         'accept': 'application/json',
         'Content-Type': 'application/json',

@@ -66,6 +66,7 @@ class CreateModelMetricItemRequest(BaseModel):
     history_sample_size: Optional[int] = None
     data_interruption: bool = False
     history_data: Optional[list[list[int]]] = [[]]
+    intelligenceContainerIP: Optional[str] = ''
 
 
 class StopModelMetricItemRequest(BaseModel):

@@ -104,6 +104,7 @@ metrics in a format that Prometheus can understand and collect.
     10) `history_sample_size` (optional): TBD
     11) `data_interruption` (optional): TBD
     12) `history_data` (optional): TBD
+    13) `intelligenceContainerIP` (optional): The IP of the specific Intelligence API container.
   
    After getting the properties it creates the specific metric asked and registers it to the internal registry. 
    **According to the metric type value**:
@@ -122,6 +123,7 @@ metrics in a format that Prometheus can understand and collect.
         - **history_sample_size (optional)** -> **int | None**.
         - **data_interruption (optional)** -> **bool = False**.
         - **history_data (optional)** -> **list[list[int]]**.
+        - **intelligenceContainerIP (optional)** -> **str = ''**.
     - **Gauge = 2**  
       Gauge expects:
         - **metric_name (mandatory)** -> **str**.
@@ -135,6 +137,7 @@ metrics in a format that Prometheus can understand and collect.
         - **history_sample_size (optional)** -> **int | None**.
         - **data_interruption (optional)** -> **bool = False**.
         - **history_data (optional)** -> **list[list[int]]**.
+        - **intelligenceContainerIP (optional)** -> **str = ''**.
     - **Info = 3**  
       Info expects:
         - **metric_name (mandatory)** -> **str**.
@@ -148,6 +151,7 @@ metrics in a format that Prometheus can understand and collect.
         - **history_sample_size (optional)** -> **int | None**.
         - **data_interruption (optional)** -> **bool = False**.
         - **history_data (optional)** -> **list[list[int]]**.
+        - **intelligenceContainerIP (optional)** -> **str = ''**.
     - **Enum = 4**  
       Enum expects:
         - **metric_name (mandatory)** -> **str**.
@@ -163,6 +167,7 @@ metrics in a format that Prometheus can understand and collect.
         - **history_sample_size (optional)** -> **int | None**.
         - **data_interruption (optional)** -> **bool = False**.
         - **history_data (optional)** -> **list[list[int]]**.
+        - **intelligenceContainerIP (optional)** -> **str = ''**.
 
 5) `stop_model_metrics` This route will receive a json payload to stop the metric creation(s) based on specific 
    telemetry data. The json passed will contain:
