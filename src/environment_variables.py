@@ -12,14 +12,20 @@ logger = logging.getLogger(__name__)
 
 INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT = int(os.getenv('INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT', 60))
 
-INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL = os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.160:3000/') + 'predict'
-INTELLIGENCE_API_MODEL_TRAINING_URL = os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.160:3000/') + 'train'
-INTELLIGENCE_API_SHOW_MODELS = os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.160:3000/') + 'show_models'
-INTELLIGENCE_API_REMOVE_MODEL = os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.160:3000/') + 'remove_model'
+
+# INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL = os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.160:3000/') + 'predict'
+# INTELLIGENCE_API_MODEL_TRAINING_URL = os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.160:3000/') + 'train'
+# INTELLIGENCE_API_SHOW_MODELS = os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.160:3000/') + 'show_models'
+# INTELLIGENCE_API_REMOVE_MODEL = os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.160:3000/') + 'remove_model'
 # INTELLIGENCE_API_MODEL_INFERENCE_BASE_URL = 'http://10.160.3.160:3000/predict'
 # INTELLIGENCE_API_MODEL_TRAINING_URL = 'http://10.160.3.160:3000/train_model'
 # INTELLIGENCE_API_SHOW_MODELS = 'http://10.160.3.160:3000/show_models'
 # INTELLIGENCE_API_REMOVE_MODEL = 'http://10.160.3.160:3000/remove_model'
+def get_intelligence_api_url(url_route: str, url_base_path: str = ''):
+    if url_base_path == '':
+        return os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.160:3000/') + url_route
+    return 'http://' + url_base_path + '/' + url_route
+
 
 # NKUA
 # GRAFANA_API_BASE_URL = os.getenv('GRAFANA_API_BASE_URL', 'http://91.138.223.127:30009/')
