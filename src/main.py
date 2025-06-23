@@ -906,12 +906,13 @@ async def process_and_send_static_metrics(nodes):
     Processes nodes and sends multiple metric creation requests asynchronously.
     """
     for node in nodes:
+        icos_cluster_id = node['icos_cluster_id']
         icos_agent_id = node['icos_agent_id']
         node_name = node['node_name']
         icos_host_id = node['icos_host_id']
 
         for metric in metric_definitions:
-            labels = {'icos_agent_id': icos_agent_id, 'node_name': node_name, 'icos_host_id': icos_host_id}
+            labels = {'icos_cluster_id': icos_cluster_id, 'icos_agent_id': icos_agent_id, 'node_name': node_name, 'icos_host_id': icos_host_id}
             labels.update(metric['labels'])  # Merge any additional labels
 
             telemetry_metrics = [metric['telemetry_template'].format(

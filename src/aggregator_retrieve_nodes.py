@@ -36,7 +36,8 @@ def process_nodes(json_data):
             node_name = node
             icos_host_id = json_data['cluster'][cluster]['node'][node]['uuid']
 
-            nodes_dict.append({'icos_agent_id': icos_agent_id, 'node_name':  node_name, 'icos_host_id': icos_host_id})
+            nodes_dict.append({'icos_cluster_id': cluster, 'icos_agent_id': icos_agent_id, 'node_name':  node_name,
+                               'icos_host_id': icos_host_id})
 
     return nodes_dict
 
