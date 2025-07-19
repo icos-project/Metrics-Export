@@ -1,4 +1,5 @@
 import asyncio
+import os
 import time
 import threading
 from threading import Thread
@@ -21,6 +22,7 @@ from src.intelligence_layer import call_intelligence_api_infer_model, prepare_re
     call_intelligence_api_train_model, call_intelligence_api_show_models, call_intelligence_api_remove_model
 from src.environment_variables import INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT, logger, SECURITY_DISABLED, DATACLAY_HOST, \
     DATACLAY_USERNAME, DATACLAY_PASSWORD
+import pandas as pd
 
 
 # Using multiprocess collector for registry
@@ -828,6 +830,13 @@ async def continue_training_and_create_metric(request, dataset_name):
 # ======================================================================================================================
 # ============================================ Static Metrics functionality ============================================
 # ======================================================================================================================
+def periodic_aggregator_check_wrapper(coro_func, *args):
+    import asyncio
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(coro_func(*args))
+
+
 async def periodic_aggregator_check(stop_event: threading.Event):
     """
     Periodically fetches node data and processes metrics every 5 minutes.
@@ -961,8 +970,18 @@ async def startup_event():
     # Create a stop event for this specific request
     stop_event = threading.Event()
     stop_events['static_metrics'] = stop_event
-    task = asyncio.create_task(periodic_aggregator_check(stop_event))
-    threads['static_metrics'] = task
+    # task_generate_demo_cpu_metrics = asyncio.create_task(generate_demo_cpu_metrics())
+    # threads['generate_demo_cpu_metrics'] = task_generate_demo_cpu_metrics
+    thread_generate_demo_cpu_metrics = threading.Thread(target=generate_demo_cpu_metrics, daemon=True)
+    thread_generate_demo_cpu_metrics.start()
+    threads['generate_demo_cpu_metrics'] = thread_generate_demo_cpu_metrics
+
+    # task = asyncio.create_task(periodic_aggregator_check(stop_event))
+    # threads['static_metrics'] = task
+    thread_periodic_aggregator_check = threading.Thread(target=periodic_aggregator_check_wrapper,
+                                                        args=(periodic_aggregator_check, stop_event), daemon=True)
+    thread_periodic_aggregator_check.start()
+    threads['thread_periodic_aggregator_check'] = thread_periodic_aggregator_check
 
 
 # ======================================================================================================================
@@ -1008,3 +1027,42 @@ async def show_models(request: RemoveModelRequest):
         http_err = 'An error occurred in remove_model: {}'.format(e)
         logger.error(http_err)
         raise HTTPException(status_code=400, detail='{}'.format(e))
+
+
+# ======================================================================================================================
+# ============================================= Generate Demo CPU Metrics ==============================================
+# ======================================================================================================================
+def generate_demo_cpu_metrics():
+    # Load CSV file
+    # Build absolute path to the CSV
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.join(base_path, 'cpu_utilization_1min_intervals.csv')
+
+    # Load CSV
+    df = pd.read_csv(csv_path)
+
+    data = {
+        'metric_type': 2,
+        'metric_name': 'test_demo_cpu_utilization_metric',
+        'metric_info': 'test demo cpu utilization metric',
+        'value': None,  # Will be set dynamically
+        'labels': {
+            'label1': 'test',
+            'label2': 'demo'
+        }
+    }
+
+    # Send each row's value as a new request, looping infinitely
+    while True:
+        for index, row in df.iterrows():
+            cpu_value = row["CPU Utilization (%)"]
+            payload = data.copy()
+            payload['value'] = float(cpu_value)
+
+            try:
+                create_metric(MetricItemRequest(**payload))
+                logger.info(f"Sent: Minute {row['Time (minutes)']} | Value: {cpu_value:.2f}")
+            except Exception as e:
+                logger.error(f"Error sending data: {e}")
+
+            time.sleep(60)  # Wait 60 seconds before sending the next value
