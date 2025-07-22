@@ -342,6 +342,8 @@ async def repeated_operation(request: CreateModelMetricItemRequest, exception_li
             # data['labels']['confidence_interval_95'] = model_results['95%_confidence_interval']
             data['metric_type'] = model_metric_type
             data['states'] = request.model_states
+            while type(model_prediction) == list:
+                model_prediction = model_prediction[0]
             data['value'] = model_prediction
             # step 4 --> post the result
             create_metric(MetricItemRequest(**data))
@@ -865,48 +867,48 @@ async def periodic_aggregator_check(stop_event: threading.Event):
 
 
 metric_definitions = [
-    {
-        'metric_name': 'intelligence_node_cpu_utilization_prediction',
-        'model_tag': 'metrics_utilization_model_xgb:latest',
-        'step_in_seconds': 60,
-        'steps_back': 12,
-        'labels': {
-            'model_name': 'metrics_utilization_model_xgb:latest',
-            'model_type': 'XGB',
-            'step_in_seconds': '60',
-            'sequence_size': '12'
-        },
-        'telemetry_template': '(1 - avg(irate(node_cpu_seconds_total{{mode="idle", icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[2m])) without (cpu,mode)) * 100'
-    },
-    {
-        'metric_name': 'intelligence_node_memory_utilization_prediction',
-        'model_tag': 'metrics_utilization_model_xgb:latest',
-        'step_in_seconds': 60,
-        'steps_back': 12,
-        'labels': {
-            'model_name': 'metrics_utilization_model_xgb:latest',
-            'model_type': 'XGB',
-            'step_in_seconds': '60',
-            'sequence_size': '12'
-        },
-        'telemetry_template': '100 * (1 - ((avg_over_time(node_memory_MemFree_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m]) + '
-                              'avg_over_time(node_memory_Cached_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m]) + '
-                              'avg_over_time(node_memory_Buffers_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m])) / '
-                              'avg_over_time(node_memory_MemTotal_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m])))'
-    },
-    {
-        'metric_name': 'intelligence_node_energy_consumption_prediction',
-        'model_tag': 'energy_consumption_forecast_xgb:latest',
-        'step_in_seconds': 60,
-        'steps_back': 12,
-        'labels': {
-            'model_name': 'energy_consumption_forecast_xgb:latest',
-            'model_type': 'XGB',
-            'step_in_seconds': '60',
-            'sequence_size': '12'
-         },
-        'telemetry_template': 'scaph_host_power_microwatts{{icos_agent_id="{icos_agent_id}", k8s_node_name="{node_name}"}}'
-    }
+    # {
+    #     'metric_name': 'intelligence_node_cpu_utilization_prediction',
+    #     'model_tag': 'metrics_utilization_model_xgb:latest',
+    #     'step_in_seconds': 60,
+    #     'steps_back': 12,
+    #     'labels': {
+    #         'model_name': 'metrics_utilization_model_xgb:latest',
+    #         'model_type': 'XGB',
+    #         'step_in_seconds': '60',
+    #         'sequence_size': '12'
+    #     },
+    #     'telemetry_template': '(1 - avg(irate(node_cpu_seconds_total{{mode="idle", icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[2m])) without (cpu,mode)) * 100'
+    # },
+    # {
+    #     'metric_name': 'intelligence_node_memory_utilization_prediction',
+    #     'model_tag': 'metrics_utilization_model_xgb:latest',
+    #     'step_in_seconds': 60,
+    #     'steps_back': 12,
+    #     'labels': {
+    #         'model_name': 'metrics_utilization_model_xgb:latest',
+    #         'model_type': 'XGB',
+    #         'step_in_seconds': '60',
+    #         'sequence_size': '12'
+    #     },
+    #     'telemetry_template': '100 * (1 - ((avg_over_time(node_memory_MemFree_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m]) + '
+    #                           'avg_over_time(node_memory_Cached_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m]) + '
+    #                           'avg_over_time(node_memory_Buffers_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m])) / '
+    #                           'avg_over_time(node_memory_MemTotal_bytes{{icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[10m])))'
+    # },
+    # {
+    #     'metric_name': 'intelligence_node_energy_consumption_prediction',
+    #     'model_tag': 'energy_consumption_forecast_xgb:latest',
+    #     'step_in_seconds': 60,
+    #     'steps_back': 12,
+    #     'labels': {
+    #         'model_name': 'energy_consumption_forecast_xgb:latest',
+    #         'model_type': 'XGB',
+    #         'step_in_seconds': '60',
+    #         'sequence_size': '12'
+    #      },
+    #     'telemetry_template': 'scaph_host_power_microwatts{{icos_agent_id="{icos_agent_id}", k8s_node_name="{node_name}"}}'
+    # }
 ]
 
 
@@ -972,9 +974,9 @@ async def startup_event():
     stop_events['static_metrics'] = stop_event
     # task_generate_demo_cpu_metrics = asyncio.create_task(generate_demo_cpu_metrics())
     # threads['generate_demo_cpu_metrics'] = task_generate_demo_cpu_metrics
-    thread_generate_demo_cpu_metrics = threading.Thread(target=generate_demo_cpu_metrics, daemon=True)
-    thread_generate_demo_cpu_metrics.start()
-    threads['generate_demo_cpu_metrics'] = thread_generate_demo_cpu_metrics
+    # thread_generate_demo_cpu_metrics = threading.Thread(target=generate_demo_cpu_metrics, daemon=True)
+    # thread_generate_demo_cpu_metrics.start()
+    # threads['generate_demo_cpu_metrics'] = thread_generate_demo_cpu_metrics
 
     # task = asyncio.create_task(periodic_aggregator_check(stop_event))
     # threads['static_metrics'] = task
