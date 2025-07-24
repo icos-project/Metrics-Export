@@ -869,14 +869,14 @@ async def periodic_aggregator_check(stop_event: threading.Event):
 metric_definitions = [
     {
         'metric_name': 'intelligence_node_cpu_utilization_prediction',
-        'model_tag': 'metrics_utilization_model_xgb:latest',
+        'model_tag': 'icos_cpu_utilization_dense_model_by_nkua',
         'step_in_seconds': 60,
-        'steps_back': 12,
+        'steps_back': 4,
         'labels': {
-            'model_name': 'metrics_utilization_model_xgb:latest',
-            'model_type': 'XGB',
+            'model_name': 'icos_cpu_utilization_dense_model_by_nkua',
+            'model_type': 'tensorflow-keras',
             'step_in_seconds': '60',
-            'sequence_size': '12'
+            'sequence_size': '4'
         },
         'telemetry_template': '(1 - avg(irate(node_cpu_seconds_total{{mode="idle", icos_agent_id="{icos_agent_id}", icos_host_id="{icos_host_id}"}}[2m])) without (cpu,mode)) * 100'
     },
