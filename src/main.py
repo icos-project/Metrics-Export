@@ -145,7 +145,67 @@ def read_root():
     return
 
 
-@app.post('/create_metric')
+@app.post(
+    '/create_metric',
+    summary="Create/Update a raw metric",
+    responses={
+        200: {
+            "description": "Metric updated",
+            "content": {"application/json": {"example": {"message": "Metric updated successfully."}}},
+        },
+        400: {"description": "Bad request (type/labels/value mismatch)"},
+        422: {"description": "Validation error"}
+    },
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "counter": {
+                            "summary": "Counter",
+                            "value": {
+                                "metric_type": 1,
+                                "metric_name": "requests_processed",
+                                "metric_info": "Total processed requests",
+                                "value": 5,
+                                "labels": {"service": "exporter", "env": "staging"},
+                            },
+                        },
+                        "gauge": {
+                            "summary": "Gauge",
+                            "value": {
+                                "metric_type": 2,
+                                "metric_name": "cpu_usage_percent",
+                                "metric_info": "CPU usage %",
+                                "value": 37.4,
+                                "labels": {"node": "worker-01"},
+                            },
+                        },
+                        "info": {
+                            "summary": "Info",
+                            "value": {
+                                "metric_type": 3,
+                                "metric_name": "build_info",
+                                "value": {"version": "1.2.3", "commit": "abc123"},
+                                "labels": {"service": "exporter"},
+                            },
+                        },
+                        "enum": {
+                            "summary": "Enum (first creation needs states)",
+                            "value": {
+                                "metric_type": 4,
+                                "metric_name": "pipeline_state",
+                                "value": "running",
+                                "labels": {"pipeline": "etl"},
+                                "states": ["pending", "running", "failed", "succeeded"],
+                            },
+                        },
+                    }
+                }
+            }
+        }
+    }
+)
 def create_metric(request: MetricItemRequest):
     """
     create_metric route will receive a json payload to create or update a metric.
@@ -278,7 +338,43 @@ def create_metric(request: MetricItemRequest):
 
 
 # unregister metrics that have been created
-@app.post('/unregister_metric')
+@app.post(
+    "/unregister_metric",
+    summary="Unregister an existing metric",
+    responses={
+        200: {
+            "description": "Metric unregistered (or not found)",
+            "content": {"application/json": {"example": {"message": "Unregistered metric successfully."}}},
+        },
+        400: {"description": "Type mismatch or other error"},
+    },
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "counter": {
+                            "summary": "Unregister a Counter",
+                            "value": {"metric_type": 1, "metric_name": "requests_processed"},
+                        },
+                        "gauge": {
+                            "summary": "Unregister a Gauge",
+                            "value": {"metric_type": 2, "metric_name": "cpu_usage_percent"},
+                        },
+                        "info": {
+                            "summary": "Unregister an Info",
+                            "value": {"metric_type": 3, "metric_name": "build_info"},
+                        },
+                        "enum": {
+                            "summary": "Unregister an Enum",
+                            "value": {"metric_type": 4, "metric_name": "pipeline_state"},
+                        },
+                    }
+                }
+            }
+        }
+    },
+)
 def unregister_metric(request: UnregisterMetricItemRequest):
     """
     unregister_metric route will receive a json payload to unregister a metric.
@@ -397,7 +493,62 @@ def run_continuous_task(request: CreateModelMetricItemRequest, exception_list, s
 
 
 # create a metric based telemetry metric provided and model that will run
-@app.post('/create_model_metric')
+@app.post(
+    "/create_model_metric",
+    summary="Create a metric from telemetry via model inference",
+    responses={
+        200: {
+            "description": "First cycle OK, background creation started",
+            "content": {"application/json": {"example": {"message": "First cycle completed successfully. Metric creation started."}}},
+        },
+        400: {
+            "description": "Telemetry empty / Intelligence API error / business error",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "intel_error": {"summary": "Intelligence error", "value": {"detail": "Intelligence API error or endpoint does not exist."}},
+                        "telemetry_empty": {"summary": "Empty telemetry", "value": {"detail": "Telemetry metric not found or returned null results."}},
+                    }
+                }
+            },
+        },
+        422: {"description": "Validation error"},
+    },
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "xgb-6-step": {
+                            "summary": "XGB (recommended 6-step)",
+                            "value": {
+                                "metric_type": 2,
+                                "metric_name": "intelligence_node_memory_utilization_prediction",
+                                "metric_info": "Memory utilization forecast",
+                                "labels": {
+                                    "icos_cluster_id": "demo-cluster",
+                                    "icos_agent_id": "staging-ocm-1",
+                                    "node_name": "worker-01",
+                                    "icos_host_id": "host-abc",
+                                    "model_name": "metrics_utilization_model_xgb:latest",
+                                    "model_type": "XGB",
+                                    "step_in_seconds": "60",
+                                    "sequence_size": "6"
+                                },
+                                "telemetry_metrics": [
+                                    "scaph_self_cpu_usage_percent{icos_agent_id=\"staging-ocm-1\"}*100"
+                                ],
+                                "model_tag": "metrics_utilization_model_xgb:latest",
+                                "step_in_seconds": 60,
+                                "steps_back": 6
+                            },
+                        },
+                    }
+                }
+            }
+        }
+    },
+)
 async def create_dynamic_model_metric_endpoint(request: CreateModelMetricItemRequest):
     """
     create_model_metric route will receive a json payload to create a metric based on specific telemetry data
@@ -614,7 +765,26 @@ async def create_static_model_metric_endpoint(request: CreateModelMetricItemRequ
         logger.error(err)
 
 
-@app.post('/stop_model_metrics')
+@app.post(
+    "/stop_model_metrics",
+    summary="Stop background metric creation by name",
+    responses={
+        200: {"description": "Stopped (names not present are ignored)", "content": {"application/json": {"example": {"message": "Metric creation(s) stopped successfully."}}}},
+        400: {"description": "Bad request / other error"},
+    },
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "single": {"summary": "Stop one metric", "value": {"metric_names": ["intelligence_node_memory_utilization_prediction"]}},
+                        "multiple": {"summary": "Stop multiple metrics", "value": {"metric_names": ["intelligence_node_memory_utilization_prediction", "intelligence_node_cpu_utilization_prediction"]}},
+                    }
+                }
+            }
+        }
+    },
+)
 async def stop_dynamic_model_metrics(request: StopModelMetricItemRequest):
     """
     stop_model_metrics route will receive a json payload to stop the metric creations based on specific telemetry data.
@@ -712,7 +882,83 @@ async def shutdown_event():
 
 # TODO: update the TBD.
 # create a metric based telemetry metric provided and model that will run
-@app.post('/train_model_metric')
+@app.post(
+    "/train_model_metric",
+    summary="Train a model and start metric creation",
+    responses={
+        200: {
+            "description": "Training kicked off; metric creation will follow",
+            "content": {"application/json": {"example": {"message": "Dataset created, model training started successfully."}}},
+        },
+        400: {"description": "Grafana/Dataclay/Intelligence/API errors"},
+        422: {"description": "Validation error"},
+    },
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        # "xgb-dataclay": {
+                        #     "summary": "Train XGB from telemetry (Dataclay on)",
+                        #     "value": {
+                        #         "labels": {"project": "icos-demo"},
+                        #         "model_name": "energy_consumption_forecast",
+                        #         "model_type": "XGB",
+                        #         "test_size": 0.2,
+                        #         "dataclay": True,
+                        #         "dataset_name": "",
+                        #         "steps_back": 12,
+                        #         "step_in_seconds": 60,
+                        #         "max_models_count": 1,
+                        #         "max_mlruns_count": 1,
+                        #         "shap_samples": 100,
+                        #         "model_parameters": {
+                        #             "n_estimators": 300,
+                        #             "max_depth": 5,
+                        #             "eta": 0.1,
+                        #             "subsample": 0.8,
+                        #             "colsample_bytree": 0.8
+                        #         },
+                        #         "telemetry_metrics": [
+                        #             'scaph_host_power_microwatts{icos_agent_id="agent-123", k8s_node_name="worker-01"}'
+                        #         ]
+                        #     },
+                        # },
+                        "xgb-existing-dataset": {
+                            "summary": "Train XGB using an existing dataset (Dataclay off)",
+                            "value": {
+                                "labels": {"project": "icos-demo"},
+                                "model_name": "memory_utilization_forecast",
+                                "model_type": "XGB",
+                                "test_size": 0.2,
+                                "dataclay": False,
+                                "dataset_name": "cpu_sample_dataset_orangepi.csv",
+                                "steps_back": 6,
+                                "step_in_seconds": 60,
+                                "max_models_count": 5,
+                                "max_mlruns_count": 10,
+                                "model_parameters": {
+                                    "xgboost_model_parameters": {
+                                        "n_estimators": 1000,
+                                        "max_depth": 7,
+                                        "eta": 0.1,
+                                        "subsample": 0.7,
+                                        "colsample_bytree": 0.8,
+                                        "alpha": 0
+                                    },
+                                },
+                                "telemetry_metrics": [
+                                    "(1 - avg(irate(node_cpu_seconds_total{mode=\"idle\", icos_agent_id=\"staging-ocm-1\", icos_host_id=\"a04a67ba78534559840cfc8b9101f218\"}[2m])) without (cpu,mode)) * 100",
+                                    "100 * (1 - ((avg_over_time(node_memory_MemFree_bytes{icos_agent_id=\"staging-ocm-1\", icos_host_id=\"a04a67ba78534559840cfc8b9101f218\"}[10m]) + avg_over_time(node_memory_Cached_bytes{icos_agent_id=\"staging-ocm-1\", icos_host_id=\"a04a67ba78534559840cfc8b9101f218\"}[10m]) + avg_over_time(node_memory_Buffers_bytes{icos_agent_id=\"staging-ocm-1\", icos_host_id=\"a04a67ba78534559840cfc8b9101f218\"}[10m])) / avg_over_time(node_memory_MemTotal_bytes{icos_agent_id=\"staging-ocm-1\", icos_host_id=\"a04a67ba78534559840cfc8b9101f218\"}[10m])))"
+                                ]
+                            },
+                        },
+                    }
+                }
+            }
+        }
+    },
+)
 async def train_model_metric_endpoint(request: TrainModelMetricItemRequest):
     """
     train_model_metric route will receive a json payload to start a model training at Intelligence layer and then create
@@ -989,7 +1235,45 @@ async def startup_event():
 # ======================================================================================================================
 # ============================================= Show Models functionality ==============================================
 # ======================================================================================================================
-@app.post('/show_models')
+@app.post(
+    "/show_models",
+    summary="List models from Intelligence API",
+    responses={
+        200: {
+            "description": "Models list",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "all": {
+                            "summary": "Show all",
+                            "value": {
+                                "models_count": 3,
+                                "models_list": [
+                                    "metrics_utilization_model_xgb:latest",
+                                    "energy_consumption_forecast_xgb:2025-08-07",
+                                    "icos_cpu_utilization_dense_model_by_nkua"
+                                ]
+                            },
+                        }
+                    }
+                }
+            },
+        },
+        400: {"description": "Upstream error"},
+    },
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "all": {"summary": "All models", "value": {"model": "all"}},
+                        "by-tag": {"summary": "Filter by full tag", "value": {"model": "metrics_utilization_model_xgb:latest"}},
+                    }
+                }
+            }
+        }
+    },
+)
 async def show_models(request: ShowModelsRequest):
     """
     show_models route will receive a json payload to show models that Intelligence API has.
@@ -1012,8 +1296,41 @@ async def show_models(request: ShowModelsRequest):
 # ======================================================================================================================
 # ============================================= Show Models functionality ==============================================
 # ======================================================================================================================
-@app.post('/remove_model')
-async def show_models(request: RemoveModelRequest):
+@app.post(
+    "/remove_model",
+    summary="Remove a model from the Intelligence model registry",
+    responses={
+        200: {
+            "description": "Removed",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "Removed_model": {
+                            "name": "metrics_utilization_model_arima",
+                            "version": "seessvetckb6zkwi"
+                        }
+                    }
+                }
+            },
+        },
+        400: {"description": "Upstream error"},
+    },
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "by-tag": {
+                            "summary": "Remove by exact tag",
+                            "value": {"model_tag": "metrics_utilization_model_xgb:latest"},
+                        }
+                    }
+                }
+            }
+        }
+    },
+)
+async def remove_models(request: RemoveModelRequest):
     """
     remove_model route will receive a json payload to delete a models that Intelligence API model registry has.
 

@@ -23,7 +23,8 @@ INTERVAL_IN_SECONDS_FOR_METRICS_EXPORT = int(os.getenv('INTERVAL_IN_SECONDS_FOR_
 # INTELLIGENCE_API_REMOVE_MODEL = 'http://10.160.3.160:3000/remove_model'
 def get_intelligence_api_url(url_route: str, url_base_path: str = ''):
     if url_base_path == '':
-        return os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.160:3000/') + url_route
+        # return os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.160:3000/') + url_route
+        return os.getenv('INTELLIGENCE_API_BASE_URL', 'http://10.160.3.20:30600/') + url_route
     return 'http://' + url_base_path + '/' + url_route
 
 
